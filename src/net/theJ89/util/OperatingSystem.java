@@ -1,4 +1,4 @@
-package net.theJ89.MMMLib;
+package net.theJ89.util;
 
 public enum OperatingSystem {
 	//Note: http://www.java-gaming.org/index.php/topic,14110
