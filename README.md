@@ -19,7 +19,7 @@ This includes, but is not limited to:
 * Downloading packages from upstream
 
 Parts of MMMLib's source code are taken or based off of Mojang's vanilla Minecraft Launcher.
-These files are in the com.mojang package; I claim no ownership for these files.
+These files are in the com.mojang and net.minecraft packages; I claim no ownership for these files.
 
 Building MMMLib
 ---------------
