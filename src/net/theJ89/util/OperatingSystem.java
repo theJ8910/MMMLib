@@ -11,18 +11,21 @@ public enum OperatingSystem {
     public static OperatingSystem[] validTypes = { LINUX, WINDOWS, OSX };
     
     //Printed name + list of identifying keywords.
-	public String   name;
-	public String[] keywords;
+	private String   name;
+	private String[] keywords;
 	
 	OperatingSystem( String name, String... keywords ) {
 		this.name     = name;
 		this.keywords = keywords;
 	}
 	
-	//Returns the current operating system
-	public static OperatingSystem get() {
-        return get( System.getProperty( "os.name" ) );
-    }
+	public String getName() {
+	    return this.name;
+	}
+	
+	public String[] getKeywords() {
+	    return this.keywords;
+	}
 	
 	//Given an operating system name (e.g. "Windows XP"), returns an OperatingSystem enum.
 	//Returns OperatingSystem.UNKNOWN if the given name is not recognized / the OS is not supported.

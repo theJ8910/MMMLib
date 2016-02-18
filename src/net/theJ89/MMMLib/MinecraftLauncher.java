@@ -1,17 +1,28 @@
 package net.theJ89.MMMLib;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 
 import org.apache.commons.lang3.JavaVersion;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.mojang.launcher.updater.DateTypeAdapter;
+import com.mojang.launcher.updater.LowerCaseEnumTypeAdapterFactory;
+
+import net.minecraft.launcher.updater.CompleteMinecraftVersion;
 import net.theJ89.util.OperatingSystem;
 import net.theJ89.util.Platform;
 import net.theJ89.util.Size;
 
 public class MinecraftLauncher {
     //TODO: Actually make this launch a Minecraft instance
-    public static void launch( String id, boolean client ) {
+    public static void launch( String id, boolean client ) throws IOException {
+        Path instanceDir = Paths.get( "instance" );
+        
         JavaLauncher l = new JavaLauncher();
         
         l.setUseConcMarkSweepGC( true );
@@ -39,12 +50,8 @@ public class MinecraftLauncher {
         //Add Minecraft arguments
         l.setArgumentsIL( "username", "password" );
         
-        //Set working directory
-        Path instanceDir = Paths.get( "instance" );
-        
-        
-        //Set environment if necessary
-        if( OperatingSystem.get() == OperatingSystem.WINDOWS && client ) {
+        //Set working directory and environment if necessary
+        if( Platform.getOS() == OperatingSystem.WINDOWS && client ) {
             l.setEnvironmentIL( "APPDATA", instanceDir.toString() );
             l.setWorkingDirectory( instanceDir.resolve( ".minecraft" ) );
         } else {

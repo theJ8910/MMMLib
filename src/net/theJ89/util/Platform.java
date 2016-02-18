@@ -16,6 +16,38 @@ public class Platform {
     }
     
     /**
+     * Returns the current operating system
+     * @return
+     */
+    public static OperatingSystem getOS() {
+        return OperatingSystem.get( System.getProperty( "os.name" ) );
+    }
+    
+    /**
+     * Returns the version of the current operating system
+     * @return
+     */
+    public static String getOSVersion() {
+        return System.getProperty( "os.version" );
+    }
+    
+    /**
+     * Returns the architecture of the current operating system
+     * @return
+     */
+    public static String getArchitecture() {
+        return System.getProperty( "os.arch" );
+    }
+    
+    /**
+     * Returns the current target (operating system, version, and architecture).
+     * @return
+     */
+    public static Target getTarget() {
+        return new Target( getOS(), getOSVersion(), getArchitecture() );
+    }
+    
+    /**
      * An absolute path to the user's home directory.
      * If Java cannot determine the user's home directory, returns the working directory.
      * @return The user's home directory.
@@ -32,7 +64,7 @@ public class Platform {
      * @return Path to the requested executable.
      */
     public static Path getJavaExecutable( boolean withConsole ) {
-        String executableName = OperatingSystem.get() == OperatingSystem.WINDOWS ? ( withConsole ? "java.exe" : "javaw.exe" ) : "java";
+        String executableName = getOS() == OperatingSystem.WINDOWS ? ( withConsole ? "java.exe" : "javaw.exe" ) : "java";
         return Paths.get( System.getProperty( "java.home" ) ).resolve( "bin" ).resolve( executableName ).toAbsolutePath();
     }
     
