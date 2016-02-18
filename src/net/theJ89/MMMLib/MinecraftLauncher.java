@@ -21,6 +21,13 @@ import net.theJ89.util.Size;
 public class MinecraftLauncher {
     //TODO: Actually make this launch a Minecraft instance
     public static void launch( String id, boolean client ) throws IOException {
+        GsonBuilder gb = new GsonBuilder();
+        gb.registerTypeAdapter( Date.class, new DateTypeAdapter() );
+        gb.registerTypeAdapterFactory( new LowerCaseEnumTypeAdapterFactory() );
+        Gson gson = gb.create();
+        
+        CompleteMinecraftVersion v = gson.fromJson( Files.newBufferedReader( Paths.get( id + ".json" ) ), CompleteMinecraftVersion.class );
+        
         Path instanceDir = Paths.get( "instance" );
         
         JavaLauncher l = new JavaLauncher();
