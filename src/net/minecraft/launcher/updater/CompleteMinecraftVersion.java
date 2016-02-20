@@ -62,7 +62,7 @@ public class CompleteMinecraftVersion {
         return this.time;
     }
     
-    public Date releaseTime() {
+    public Date getReleaseTime() {
         return this.releaseTime;
     }
 }

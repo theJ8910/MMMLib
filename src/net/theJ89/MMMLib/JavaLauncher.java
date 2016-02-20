@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.JavaVersion;
 
@@ -14,7 +16,8 @@ import net.theJ89.util.Platform;
 import net.theJ89.util.Size;
 
 public class JavaLauncher {
-    private static long MAX_JAVA32_MEMORY = 4 * Size.GIGABYTE;
+    private static long    MAX_JAVA32_MEMORY = 4 * Size.GIGABYTE;
+    private static Pattern ARGUMENT_REGEX    = Pattern.compile( "(?:\"([^\"]*)\")|(?:[^ ]+)" );
     
     //Java executable options
     private boolean             wantConsole;
@@ -59,6 +62,21 @@ public class JavaLauncher {
         
         this.workingDirectory      = null;
         this.environment           = null;
+    }
+    
+    /**
+     * Parses a string of command line arguments and returns them as a list.
+     * The arguments are expected
+     * @param arguments
+     */
+    public static List<String> parseArguments( String argumentString ) {
+        Matcher m = ARGUMENT_REGEX.matcher( argumentString );
+        List<String> arguments = new ArrayList<String>();
+        while( m.find() ) {
+            String innerMatch = m.group(1);
+            arguments.add( innerMatch == null ? m.group() : innerMatch );
+        }
+        return arguments;
     }
     
     /**
@@ -413,6 +431,13 @@ public class JavaLauncher {
         if( this.classPaths != null ) {
             commandLine.add( "-cp" );
             commandLine.add( String.join( ";", this.classPaths ) );
+        }
+        
+        //If we had to set the operating system to Windows 10 manually,
+        //do the same thing for the instance of Java we're launching.
+        if( Platform.getWinTenHack() ) {
+            commandLine.add( "-Dos.name=Windows 10" );
+            commandLine.add( "-Dos.version=10.0" );
         }
         
         //Construct JVM library path from list of library paths we may have been given

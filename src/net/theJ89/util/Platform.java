@@ -7,6 +7,29 @@ import org.apache.commons.lang3.JavaVersion;
 
 public class Platform {
     /**
+     * If this is true, we manually set the operating system name and version to Windows 10.
+     */
+    private static boolean winTenHack = false;
+    
+    /**
+     * Call this to manually set the operating system to Windows 10 (in case Java doesn't detect this correctly)
+     */
+    public static void setWinTenHack() {
+        System.setProperty( "os.name", "Windows 10" );
+        System.setProperty( "os.version", "10" );
+        winTenHack = true;
+    }
+    
+    /**
+     * If this returns true, setWinTenHack() was called to manually set the operating system name / version to Windows 10.
+     * If this returns false, it was not set manually.
+     * @return
+     */
+    public static boolean getWinTenHack() {
+        return winTenHack;
+    }
+    
+    /**
      * Returns the bitness of the JVM.<br/>
      * Bitness is <a href="https://en.wiktionary.org/wiki/bitness">defined</a> as "The architecture of a computer system, in terms of how many bits compose a basic values it can deal with".
      * @return 32 for a 32-bit JVM or 64 for a 64-bit JVM.
@@ -73,6 +96,11 @@ public class Platform {
      * @return The java version.
      */
     public static JavaVersion getJavaVersion() {
-        return JavaVersion.valueOf( System.getProperty( "java.version" ) );
+        String[] parts = System.getProperty( "java.version" ).split( "\\." );
+        try{
+            return JavaVersion.valueOf( "JAVA_" + parts[0] + "_" + parts[1] );
+        } catch( IllegalArgumentException e ) {
+            return JavaVersion.JAVA_RECENT;
+        }
     }
 }

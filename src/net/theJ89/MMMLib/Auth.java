@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+import com.mojang.authlib.UserType;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.exceptions.InvalidCredentialsException;
@@ -123,6 +124,7 @@ public class Auth {
         userdata.setUserID( u.getId() );
         userdata.setUUID( p.getId() );
         userdata.setAccessToken( res.getAccessToken() );
+        userdata.setUserType( p.isLegacy() ? UserType.LEGACY : UserType.MOJANG );
     }
     
     /**

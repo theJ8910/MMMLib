@@ -25,6 +25,10 @@ public class Main {
             try {
                 Auth.logInWithAccessToken();
                 out.print( "Logged in with access token." );
+                
+                Instance i = new Instance( "MMM Test", "1.7.10", Side.CLIENT, Paths.get( "mmmtest" ) );
+                MinecraftLauncher l = new MinecraftLauncher( i, Auth.getUserData() );
+                l.launch();
             } catch( InvalidCredentialsException e ) {
                 out.print( "Please enter your Minecraft username / email: " );
                 String username = in.readLine();
