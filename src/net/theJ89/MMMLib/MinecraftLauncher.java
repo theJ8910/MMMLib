@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.launcher.updater.DateTypeAdapter;
 import com.mojang.launcher.updater.LowerCaseEnumTypeAdapterFactory;
+import com.mojang.launcher.updater.download.assets.AssetIndex;
 
 import net.minecraft.launcher.updater.CompleteMinecraftVersion;
 import net.theJ89.util.OperatingSystem;
@@ -26,7 +27,8 @@ public class MinecraftLauncher {
         gb.registerTypeAdapterFactory( new LowerCaseEnumTypeAdapterFactory() );
         Gson gson = gb.create();
         
-        CompleteMinecraftVersion v = gson.fromJson( Files.newBufferedReader( Paths.get( id + ".json" ) ), CompleteMinecraftVersion.class );
+        CompleteMinecraftVersion v = gson.fromJson( Files.newBufferedReader( Paths.get( id + ".json"        ) ), CompleteMinecraftVersion.class );
+        AssetIndex               i = gson.fromJson( Files.newBufferedReader( Paths.get( id + "_assets.json" ) ), AssetIndex.class               );
         
         Path instanceDir = Paths.get( "instance" );
         
