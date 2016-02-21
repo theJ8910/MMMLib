@@ -2,11 +2,13 @@ package com.mojang.authlib.yggdrasil;
 
 import java.util.UUID;
 
+import com.mojang.authlib.properties.PropertyMap;
+
 public class GameProfile {
-    private final UUID id;
-    private final String name;
-    //private PropertyMap properties = new PropertyMap();
-    private boolean legacy;
+    private UUID        id;
+    private String      name;
+    private PropertyMap properties;
+    private boolean     legacy;
     
     public GameProfile( UUID id, String name ) {
         this.id   = id;
@@ -21,11 +23,9 @@ public class GameProfile {
         return this.name;
     }
     
-    /*
-    public PropertyMap getPropertyMap() {
+    public PropertyMap getProperties() {
         return this.properties;
     }
-    */
     
     public boolean isLegacy() {
         return this.legacy;

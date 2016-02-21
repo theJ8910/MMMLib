@@ -17,6 +17,7 @@ import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.exceptions.InvalidCredentialsException;
 import com.mojang.authlib.exceptions.UserMigratedException;
+import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.authlib.yggdrasil.GameProfile;
 import com.mojang.authlib.yggdrasil.User;
 import com.mojang.authlib.yggdrasil.request.AuthenticationRequest;
@@ -125,6 +126,10 @@ public class Auth {
         userdata.setUUID( p.getId() );
         userdata.setAccessToken( res.getAccessToken() );
         userdata.setUserType( p.isLegacy() ? UserType.LEGACY : UserType.MOJANG );
+        
+        //Note: Both users and user profiles have a property map, but it seems like only the user's property map is used.
+        PropertyMap properties = u.getProperties();
+        userdata.setProperties( properties != null ?  properties : new PropertyMap() );
     }
     
     /**

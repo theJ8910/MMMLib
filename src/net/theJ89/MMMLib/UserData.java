@@ -3,14 +3,16 @@ package net.theJ89.MMMLib;
 import java.util.UUID;
 
 import com.mojang.authlib.UserType;
+import com.mojang.authlib.properties.PropertyMap;
 
 public class UserData {
-    private UUID     clientToken;
-    private UUID     accessToken;
-    private UUID     uuid;
-    private String   username;
-    private int      userid;
-    private UserType usertype;
+    private UUID        clientToken;
+    private UUID        accessToken;
+    private UUID        uuid;
+    private String      username;
+    private int         userid;
+    private UserType    usertype;
+    private PropertyMap properties;
     
     public UserData() {
         this.clientToken = UUID.randomUUID();
@@ -19,14 +21,16 @@ public class UserData {
         this.username    = null;
         this.userid      = 0;
         this.usertype    = UserType.LEGACY;
+        this.properties  = new PropertyMap();
     }
-    public UserData( UUID clientToken, UUID accessToken, UUID uuid, String username, int userid, UserType usertype ) {
+    public UserData( UUID clientToken, UUID accessToken, UUID uuid, String username, int userid, UserType usertype, PropertyMap properties ) {
         this.clientToken = clientToken;
         this.accessToken = accessToken;
         this.uuid        = uuid;
         this.username    = username;
         this.userid      = userid;
-        this.usertype    = usertype; 
+        this.usertype    = usertype;
+        this.properties  = properties;
     }
     public void setUsername( String username ) {
         this.username = username;
@@ -63,5 +67,11 @@ public class UserData {
     }
     public UserType getUserType() {
         return this.usertype;
+    }
+    public void setProperties( PropertyMap properties ) {
+        this.properties = properties;
+    }
+    public PropertyMap getProperties() {
+        return this.properties;
     }
 }

@@ -10,6 +10,7 @@ import org.apache.commons.io.Charsets;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.authlib.yggdrasil.response.Response;
 import com.mojang.util.ResponseDeserializer;
 import com.mojang.util.UUIDTypeAdapter;
@@ -18,8 +19,9 @@ public class HTTP {
     protected static Gson gson;
     static {
         GsonBuilder gb = new GsonBuilder();
-        gb.registerTypeAdapter( UUID.class, new UUIDTypeAdapter() );
-        gb.registerTypeAdapter( Response.class, new ResponseDeserializer() );
+        gb.registerTypeAdapter( UUID.class,        new UUIDTypeAdapter()        );
+        gb.registerTypeAdapter( Response.class,    new ResponseDeserializer()   );
+        gb.registerTypeAdapter( PropertyMap.class, new PropertyMap.Serializer() );
         gson = gb.create();
     }
     

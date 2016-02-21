@@ -4,23 +4,22 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.UUID;
 
 import org.apache.commons.lang3.JavaVersion;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.mojang.authlib.UserType;
+import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.util.UUIDTypeAdapter;
 
 import net.minecraft.launcher.updater.CompleteMinecraftVersion;
 import net.minecraft.launcher.updater.Library;
-import net.theJ89.util.OperatingSystem;
 import net.theJ89.util.Platform;
 import net.theJ89.util.Size;
 import net.theJ89.util.Size2D;
@@ -36,19 +35,19 @@ public class MinecraftLauncher {
     
     //Note: The following directories (versions, libraries, natives) are relative to the instance directory:
     //Where Minecraft version executables and info are stored
-    private static String VERSIONS_DIRECTORY = "versions";
+    private static final String VERSIONS_DIRECTORY = "versions";
     
     //Where Java libraries Minecraft needs are stored
-    private static String LIBRARIES_DIRECTORY = "libraries";
+    private static final String LIBRARIES_DIRECTORY = "libraries";
     
     //Directory we can find the natives in
-    private static String NATIVES_DIRECTORY = "natives";
+    private static final String NATIVES_DIRECTORY = "natives";
     
     //Directory we can find the assets in
-    private static String ASSETS_DIRECTORY = "assets";
+    private static final String ASSETS_DIRECTORY = "assets";
     
     //Virtual assets root (inside of ASSETS_DIRECTORY) for versions that need it
-    private static String ASSETS_VIRTUAL_DIRECTORY = "virtual";
+    private static final String ASSETS_VIRTUAL_DIRECTORY = "virtual";
     
     private Instance                 instance;
     private UserData                 userdata;
@@ -64,7 +63,6 @@ public class MinecraftLauncher {
         this.demo      = false;
     }
     
-    //TODO: Actually make this launch a Minecraft instance
     public void launch() throws IOException {
         Target target = Platform.getTarget();
         JavaLauncher l = new JavaLauncher();
@@ -107,55 +105,13 @@ public class MinecraftLauncher {
         l.setLibraryPathsIL( NATIVES_DIRECTORY );
         
         //Set classname
-        //"net.minecraft.client.Minecraft"
         l.setClassname( this.version.getMainClass() );
+                
+        //Build list of Minecraft arguments
+        l.setArguments( getArguments() );
         
-        //Add Minecraft arguments
-        List<String> arguments = getArguments();
-        
-        //Include desired game resolution if set
-        Size2D resolution = this.instance.getResolution();
-        if( resolution != null ) {
-            arguments.add( "--width" );
-            arguments.add( Integer.toString( resolution.getWidth() ) );
-            arguments.add( "--height" );
-            arguments.add( Integer.toString( resolution.getHeight() ) );
-        }
-        
-        //Pass proxy settings to Minecraft if any are set
-        Proxy proxy = Proxy.get();
-        if( proxy != null ) {
-            arguments.add( "--proxyHost" );
-            arguments.add( proxy.getHost() );
-            arguments.add( "--proxyPort" );
-            arguments.add( proxy.getPort() );
-            
-            //Pass username and password if the proxy requires it
-            String proxyUsername = proxy.getUsername();
-            if( proxyUsername != null ) {
-                arguments.add( "--proxyUser" );
-                arguments.add( proxyUsername );
-                arguments.add( "--proxyPass" );
-                arguments.add( proxy.getPassword() );
-            }
-        }
-        
-        //If demo mode is set, pass "--demo"
-        if( this.demo )
-            arguments.add( "--demo" );
-        
-        l.setArguments( arguments );
-        
-        //Set working directory and environment if necessary
-        //2013-09-19T15:52:37+00:00
-        Calendar c = Calendar.getInstance( TimeZone.getTimeZone("UTC") );
-        c.set(2013, 9, 19, 15, 52, 37);
-        if( Platform.getOS() == OperatingSystem.WINDOWS && this.instance.getSide() == Side.CLIENT && this.version.getReleaseTime().before( c.getTime() ) ) {
-            l.setEnvironmentIL( "APPDATA", this.directory.toString() );
-            l.setWorkingDirectory( this.directory.resolve( ".minecraft" ) );
-        } else {
-            l.setWorkingDirectory( this.directory );
-        }
+        //Set working directory
+        l.setWorkingDirectory( this.directory );
         
         //Run Minecraft
         l.launch();
@@ -174,10 +130,22 @@ public class MinecraftLauncher {
         //a string substitutor utilizing this table. We take the same approach below.
         Map<String,String> m = new HashMap<String, String>();
         
-        //Temporary until I get this sorted out.
-        //The serializers in the launcher suggest these are JSON arrays.
-        m.put( "user_properties",   "[]" ); //Note: this is described as "legacy" in the launcher
-        m.put( "user_property_map", "[]" );
+        //Create both legacy and modern user property JSON.
+        //User properties were represented differently in older versions of Minecraft.
+        //We need to support both forms to be compatible with older versions.
+        {
+            PropertyMap properties = this.userdata.getProperties();
+            Gson gson;
+            GsonBuilder gb = new GsonBuilder();
+            gb.registerTypeAdapter( PropertyMap.class, new PropertyMap.LegacySerializer() );
+            gson = gb.create();
+            m.put( "user_properties",   gson.toJson( properties ) );
+            
+            gb = new GsonBuilder();
+            gb.registerTypeAdapter( PropertyMap.class, new PropertyMap.Serializer() );
+            gson = gb.create();
+            m.put( "user_property_map", gson.toJson( properties ) );
+        }
         
         //All of these placeholders are related to user account information / authentication.
         if( this.userdata != null ) {
@@ -214,6 +182,38 @@ public class MinecraftLauncher {
         StrSubstitutor ss = new StrSubstitutor( m );
         for( int i = 0; i < arguments.size(); ++i )
             arguments.set( i, ss.replace( arguments.get( i ) ) );
+        
+        //Include desired game resolution if set
+        Size2D resolution = this.instance.getResolution();
+        if( resolution != null ) {
+            arguments.add( "--width" );
+            arguments.add( Integer.toString( resolution.getWidth() ) );
+            arguments.add( "--height" );
+            arguments.add( Integer.toString( resolution.getHeight() ) );
+        }
+        
+        //Pass proxy settings to Minecraft if any are set
+        Proxy proxy = Proxy.get();
+        if( proxy != null ) {
+            arguments.add( "--proxyHost" );
+            arguments.add( proxy.getHost() );
+            arguments.add( "--proxyPort" );
+            arguments.add( proxy.getPort() );
+            
+            //Pass username and password if the proxy requires it
+            String proxyUsername = proxy.getUsername();
+            if( proxyUsername != null ) {
+                arguments.add( "--proxyUser" );
+                arguments.add( proxyUsername );
+                arguments.add( "--proxyPass" );
+                arguments.add( proxy.getPassword() );
+            }
+        }
+        
+        //If demo mode is set, pass "--demo"
+        if( this.demo )
+            arguments.add( "--demo" );
+        
         return arguments;
     }
     
