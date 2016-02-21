@@ -26,9 +26,6 @@ public class Main {
                 Auth.logInWithAccessToken();
                 out.print( "Logged in with access token." );
                 
-                Instance i = new Instance( "MMM Test", "1.7.10", Side.CLIENT, Paths.get( "mmmtest" ) );
-                MinecraftLauncher l = new MinecraftLauncher( i, Auth.getUserData() );
-                l.launch();
             } catch( InvalidCredentialsException e ) {
                 out.print( "Please enter your Minecraft username / email: " );
                 String username = in.readLine();
@@ -42,6 +39,10 @@ public class Main {
                 
                 out.println( Auth.isAccessTokenValid() ? "Valid token." : "Invalid token." );
             }
+            
+            Instance i = new Instance( "MMM Test", "1.7.10", Side.CLIENT, Paths.get( "mmmtest" ) );
+            MinecraftLauncher l = new MinecraftLauncher( i, Auth.getUserData() );
+            l.launch();
             
             Auth.saveSettings( USERDATA_FILE );
         } catch( AuthenticationException | IOException e ) {

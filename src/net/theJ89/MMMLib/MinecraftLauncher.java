@@ -34,13 +34,17 @@ public class MinecraftLauncher {
     //For versions of Java where this isn't set manually, 128 MB seems to be sufficient to handle an instance with ~200 mods.
     private static long DEFAULT_PERMGEN_SIZE = 128 * Size.MEGABYTE;
     
+    //Note: The following directories (versions, libraries, natives) are relative to the instance directory:
     //Where Minecraft version executables and info are stored
     private static String VERSIONS_DIRECTORY = "versions";
     
-    //Directory we can find the natives in (relative to the instance directory)
+    //Where Java libraries Minecraft needs are stored
+    private static String LIBRARIES_DIRECTORY = "libraries";
+    
+    //Directory we can find the natives in
     private static String NATIVES_DIRECTORY = "natives";
     
-    //Directory we can find the assets in (relative to the instance directory)
+    //Directory we can find the assets in
     private static String ASSETS_DIRECTORY = "assets";
     
     //Virtual assets root (inside of ASSETS_DIRECTORY) for versions that need it
@@ -95,7 +99,7 @@ public class MinecraftLauncher {
         
         for( Library library : this.version.getLibraries() )
             if( !library.isNative() )
-                classPaths.add( library.getPath( target ).toString() );
+                classPaths.add( Paths.get( LIBRARIES_DIRECTORY ).resolve( library.getPath( target ) ).toString() );
         
         l.setClassPaths( classPaths );
         

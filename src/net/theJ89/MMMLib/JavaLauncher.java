@@ -450,7 +450,7 @@ public class JavaLauncher {
         
         //Set the name of the class to be launched.
         if( this.classname == null )
-            throw new RuntimeException( "No classpath set!" );
+            throw new RuntimeException( "No classname set!" );
         commandLine.add( this.classname );
         
         //Add program arguments
@@ -472,7 +472,8 @@ public class JavaLauncher {
         }
         
         //Finally, launch Java.
-        try                    { pb.start();          }
+        pb.inheritIO();
+        try                    {pb.start();           }
         catch( IOException e ) { e.printStackTrace(); }
     }
 }
