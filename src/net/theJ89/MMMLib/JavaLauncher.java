@@ -36,6 +36,7 @@ public class JavaLauncher {
     
     //Program options
     private String              classname;
+    private String              jarname;
     private List<String>        arguments;
     
     //Process options
@@ -310,12 +311,25 @@ public class JavaLauncher {
      * This must name a class with a "public static void main( String[] args ) { ... }" method.
      * @param classname
      */
-    public void setClassname( String classname) {
+    public void setClassName( String classname) {
         this.classname = classname;
     }
     
-    public String getClassname() {
+    public String getClassName() {
         return this.classname;
+    }
+    
+    /**
+     * Set the name of the jar we want Java to run.
+     * Note: A classname or jarname (not both) must be set or Java will fail to launch.
+     * @param jarname
+     */
+    public void setJarName( String jarname ) {
+        this.jarname = jarname;
+    }
+    
+    public String getJarName() {
+        return this.jarname;
     }
     
     /**
@@ -449,9 +463,19 @@ public class JavaLauncher {
             commandLine.addAll( otherJVMArguments );
         
         //Set the name of the class to be launched.
-        if( this.classname == null )
-            throw new RuntimeException( "No classname set!" );
-        commandLine.add( this.classname );
+        if( this.classname != null ) {
+            if( this.jarname != null ) {
+                throw new RuntimeException( "You cannot set both a classname and a jarname." );
+            } else {
+                commandLine.add( this.classname );
+            }
+        } else if( this.jarname != null ) {
+            commandLine.add( "-jar" );
+            commandLine.add( this.jarname );
+        } else {
+            throw new RuntimeException( "You must set a classname or a jarname." );
+        }
+        
         
         //Add program arguments
         if( this.arguments != null )

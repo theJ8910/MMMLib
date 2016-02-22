@@ -14,4 +14,13 @@ public class AssetIndexInfo extends DownloadInfo {
     public String getId() {
         return this.id;
     }
+    
+    public void validate( String id ) {
+        super.validate();
+        
+        if( this.id == null )
+            throw new RuntimeException( "No ID." );
+        if( !this.id.equals( id ) )
+            throw new RuntimeException( "ID (" + this.id + ") doesn't match expected ID(" + id + ")." );
+    }
 }

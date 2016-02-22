@@ -18,6 +18,15 @@ public class AssetIndex {
         public long getSize() {
             return this.size;
         }
+        
+        public void validate() {
+            if( this.hash == null )
+                throw new RuntimeException( "hash is null." );
+        }
+        
+        public String getPath() {
+            return this.hash.substring(0, 2) + "/" + this.hash;
+        }
     }
     
     private Map<String,AssetObject> objects;
@@ -43,5 +52,12 @@ public class AssetIndex {
      */
     public boolean isVirtual() {
         return this.virtual;
+    }
+    
+    public void validate() {
+        if( this.objects == null )
+            throw new RuntimeException( "objects is null." );
+        for( AssetObject value : this.objects.values() )
+            value.validate();
     }
 }

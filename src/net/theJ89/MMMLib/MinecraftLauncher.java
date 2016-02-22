@@ -18,6 +18,7 @@ import com.mojang.authlib.UserType;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.util.UUIDTypeAdapter;
 
+import net.minecraft.launcher.updater.Artifact;
 import net.minecraft.launcher.updater.CompleteMinecraftVersion;
 import net.minecraft.launcher.updater.Library;
 import net.theJ89.util.Platform;
@@ -32,22 +33,6 @@ public class MinecraftLauncher {
     
     //For versions of Java where this isn't set manually, 128 MB seems to be sufficient to handle an instance with ~200 mods.
     private static long DEFAULT_PERMGEN_SIZE = 128 * Size.MEGABYTE;
-    
-    //Note: The following directories (versions, libraries, natives) are relative to the instance directory:
-    //Where Minecraft version executables and info are stored
-    private static final String VERSIONS_DIRECTORY = "versions";
-    
-    //Where Java libraries Minecraft needs are stored
-    private static final String LIBRARIES_DIRECTORY = "libraries";
-    
-    //Directory we can find the natives in
-    private static final String NATIVES_DIRECTORY = "natives";
-    
-    //Directory we can find the assets in
-    private static final String ASSETS_DIRECTORY = "assets";
-    
-    //Virtual assets root (inside of ASSETS_DIRECTORY) for versions that need it
-    private static final String ASSETS_VIRTUAL_DIRECTORY = "virtual";
     
     private Instance                 instance;
     private UserData                 userdata;
@@ -64,8 +49,9 @@ public class MinecraftLauncher {
     }
     
     public void launch() throws IOException {
-        Target target = Platform.getTarget();
-        JavaLauncher l = new JavaLauncher();
+        Target       target = Platform.getTarget();
+        String       id     = this.version.getId();
+        JavaLauncher l      = new JavaLauncher();
         
         //The Minecraft launcher always passes these options
         l.setUseConcMarkSweepGC( true );
@@ -90,25 +76,34 @@ public class MinecraftLauncher {
         else if( !Platform.getJavaVersion().atLeast( JavaVersion.JAVA_1_8 ) )
             l.setMetaspaceSize( DEFAULT_PERMGEN_SIZE );
         
-        //Set class paths
-        //The Minecraft instance .jar and any Java libraries it needs should be listed here.
-        List<String> classPaths = new ArrayList< String >();
-        classPaths.add( Paths.get( VERSIONS_DIRECTORY ).resolve( this.version.getId() ).resolve( this.version.getId() + ".jar" ).toString() );
-        
-        for( Library library : this.version.getLibraries() )
-            if( !library.isNative() )
-                classPaths.add( Paths.get( LIBRARIES_DIRECTORY ).resolve( library.getPath( target ) ).toString() );
-        
-        l.setClassPaths( classPaths );
-        
-        //Set native library dir
-        l.setLibraryPathsIL( NATIVES_DIRECTORY );
-        
-        //Set classname
-        l.setClassname( this.version.getMainClass() );
-                
-        //Build list of Minecraft arguments
-        l.setArguments( getArguments() );
+        if( this.instance.getSide() == Side.CLIENT ) {
+            //Set class paths
+            //The Minecraft instance .jar and any Java libraries it needs should be listed here.
+            List<String> classPaths = new ArrayList< String >();
+            classPaths.add( Paths.get( MinecraftConstants.VERSIONS_DIRECTORY ).resolve( id ).resolve( id + ".jar" ).toString() );
+            
+            for( Library library : this.version.getLibraries() )
+                if( !library.isNative() ) {
+                    Artifact artifact = library.getArtifact( target );
+                    if( artifact == null )
+                        continue;
+                    classPaths.add( Paths.get( MinecraftConstants.LIBRARIES_DIRECTORY ).resolve( artifact.getPath() ).toString() );
+                }
+            
+            l.setClassPaths( classPaths );
+            
+            //Set native library dir
+            l.setLibraryPathsIL( MinecraftConstants.NATIVES_DIRECTORY );
+            
+            //Set classname
+            l.setClassName( this.version.getMainClass() );
+                    
+            //Build list of Minecraft arguments
+            l.setArguments( getArguments() );
+        } else {
+            l.setJarName( "minecraft_server." + id + ".jar" );
+            l.setArgumentsIL( "nogui" );
+        }
         
         //Set working directory
         l.setWorkingDirectory( this.directory );
@@ -118,7 +113,7 @@ public class MinecraftLauncher {
     }
     
     private List<String> getArguments() {
-        Path assetDir = this.directory.resolve( ASSETS_DIRECTORY );
+        Path assetDir = this.directory.resolve( MinecraftConstants.ASSETS_DIRECTORY );
         String assetID = this.version.getAssetIndex().getId();
         
         //Parse the argument string to get a list of arguments
@@ -171,7 +166,7 @@ public class MinecraftLauncher {
         m.put( "version_name", this.instance.getMinecraftVersion() );
         
         m.put( "game_directory", this.directory.toString() );
-        m.put( "game_assets", assetDir.resolve( ASSETS_VIRTUAL_DIRECTORY ).resolve( assetID ).toString() ); //e.g. assets/virtual/1.7.10
+        m.put( "game_assets", assetDir.resolve( MinecraftConstants.ASSETS_VIRTUAL_DIRECTORY ).resolve( assetID ).toString() ); //e.g. assets/virtual/1.7.10
         
         m.put( "assets_root", assetDir.toString() );
         m.put( "assets_index_name", assetID );

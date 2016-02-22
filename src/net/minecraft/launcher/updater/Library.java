@@ -1,10 +1,9 @@
 package net.minecraft.launcher.updater;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 
@@ -33,6 +32,23 @@ public class Library {
         
         public Map< String, Artifact > getClassifiers() {
             return this.classifiers;
+        }
+        
+        public void validate( String name, Map< OperatingSystem,String > natives ) {
+            if( artifact != null ) {
+                if( classifiers == null )
+                    this.artifact.validate( Library.getPathFromName( name ) );
+            } else if( classifiers != null ) {
+                if( natives == null )
+                    throw new RuntimeException( "Library downloads has classifiers, but library doesn't have natives." );
+                
+                //Note: we don't check whether or not the classifier exists in natives
+                //because natives can create classifiers with placeholders, e.g. "natives-windows-${arch}".
+                for( Entry< String, Artifact > entry : this.classifiers.entrySet() )
+                    entry.getValue().validate( Library.getPathFromName( name, entry.getKey() ) );
+            } else {
+                throw new RuntimeException( "Library downloads have neither artifact nor classifiers." );
+            }
         }
     }
     
@@ -91,7 +107,7 @@ public class Library {
             return true;
         
         //Compatibile rules stack; the last compatible rule (in the order they're defined) determines whether or not this target is compatible or not.
-        Action action = Action.ALLOW;
+        Action action = Action.DISALLOW;
         for( CompatibilityRule rule : this.rules )
             if( rule.appliesTo( target ) )
                 action = rule.getAction();
@@ -103,8 +119,8 @@ public class Library {
      * Calls {@link #getPath(OperatingSystem)} with the current operating system.
      * @return The library path or null.
      */
-    public Path getPath() {
-        return getPath( Platform.getTarget() );
+    public Artifact getArtifact() {
+        return getArtifact( Platform.getTarget() );
     }
     
     /**
@@ -116,7 +132,7 @@ public class Library {
      * @param os - The operating system for the desired natives.
      * @return The library path or null.
      */
-    public Path getPath( Target target ) {
+    public Artifact getArtifact( Target target ) {
         //There is no path if this incompatible
         if( !this.isCompatible( target ) )
             return null;
@@ -131,13 +147,13 @@ public class Library {
             //Classifiers can sometimes contain ${arch}.
             //Substitute this with the target architecture.
             Map< String, String > m = new HashMap< String, String >();
-            m.put( "arch", target.getArch() );
+            m.put( "arch", target.getArch().equals( "amd64" ) ? "64" : "32" );
             StrSubstitutor ss = new StrSubstitutor( m );
             
-            return getPathFromName( this.name, ss.replace( classifier ) );
+            return this.downloads.classifiers.get( ss.replace( classifier ) );
         }
         
-        return getPathFromName( this.name );
+        return this.downloads.artifact;
     }
     
     
@@ -154,9 +170,9 @@ public class Library {
      * </pre>
      * @return The library path.
      */
-    public static Path getPathFromName( String name ) {
+    public static String getPathFromName( String name ) {
         String[] parts = name.split( ":" );
-        return Paths.get( parts[0].replace( '.', '/' ), parts[1], parts[2], parts[1] + "-" + parts[2] + ".jar" );
+        return String.format( "%1$s/%2$s/%3$s/%2$s-%3$s.jar", parts[0].replace( '.', '/' ), parts[1], parts[2] );
     }
     
     /**
@@ -174,9 +190,9 @@ public class Library {
      * @param classifier
      * @return The library path.
      */
-    public static Path getPathFromName( String name, String classifier ) {
+    public static String getPathFromName( String name, String classifier ) {
         String[] parts = name.split( ":" );
-        return Paths.get( parts[0].replace( '.', '/' ), parts[1], parts[2], parts[1] + "-" + parts[2] + "-" + classifier + ".jar" );
+        return String.format( "%1$s/%2$s/%3$s/%2$s-%3$s-%4$s.jar", parts[0].replace( '.', '/' ), parts[1], parts[2], classifier );
     }
     
     /**
@@ -185,6 +201,14 @@ public class Library {
      * @return
      */
     public boolean isNative() {
-        return this.downloads.classifiers != null;
+        return this.natives != null;
+    }
+
+    public void validate() {
+        if( this.name == null )
+            throw new RuntimeException( "name is null." );
+        if( this.downloads == null )
+            throw new RuntimeException( "downloads is null." );
+        this.downloads.validate( this.name, this.natives );
     }
 }

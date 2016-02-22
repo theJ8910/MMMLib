@@ -3,9 +3,9 @@ package net.minecraft.launcher.updater;
 import java.net.URL;
 
 public class DownloadInfo {
-    private URL    url;
-    private String sha1;
-    private int    size;
+    protected URL    url;
+    protected String sha1;
+    protected int    size;
     
     public URL getURL() {
         return this.url;
@@ -17,5 +17,13 @@ public class DownloadInfo {
     
     public int getSize() {
         return this.size;
+    }
+
+    public void validate() {
+        if( this.url == null )
+            throw new RuntimeException( "url is null." );
+        
+        if( this.sha1 == null )
+            throw new RuntimeException( "sha1 is null." );
     }
 }
