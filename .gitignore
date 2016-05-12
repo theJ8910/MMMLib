@@ -3,4 +3,8 @@ bin/
 .classpath
 .project
 *.iml
+assets/
+instances/
+versions/
+temp/
 userdata.json

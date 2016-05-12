@@ -10,7 +10,7 @@ public class Platform {
      * If this is true, we manually set the operating system name and version to Windows 10.
      */
     private static boolean winTenHack = false;
-    
+
     /**
      * Call this to manually set the operating system to Windows 10 (in case Java doesn't detect this correctly)
      */
@@ -19,7 +19,7 @@ public class Platform {
         System.setProperty( "os.version", "10" );
         winTenHack = true;
     }
-    
+
     /**
      * If this returns true, setWinTenHack() was called to manually set the operating system name / version to Windows 10.
      * If this returns false, it was not set manually.
@@ -28,7 +28,7 @@ public class Platform {
     public static boolean getWinTenHack() {
         return winTenHack;
     }
-    
+
     /**
      * Returns the bitness of the JVM.<br/>
      * Bitness is <a href="https://en.wiktionary.org/wiki/bitness">defined</a> as "The architecture of a computer system, in terms of how many bits compose a basic values it can deal with".
@@ -37,7 +37,7 @@ public class Platform {
     public static int getBitness() {
         return Integer.parseInt( System.getProperty( "sun.arch.data.model" ) );
     }
-    
+
     /**
      * Returns the current operating system
      * @return
@@ -45,7 +45,7 @@ public class Platform {
     public static OperatingSystem getOS() {
         return OperatingSystem.get( System.getProperty( "os.name" ) );
     }
-    
+
     /**
      * Returns the version of the current operating system
      * @return
@@ -53,7 +53,7 @@ public class Platform {
     public static String getOSVersion() {
         return System.getProperty( "os.version" );
     }
-    
+
     /**
      * Returns the architecture of the current operating system
      * @return
@@ -61,7 +61,7 @@ public class Platform {
     public static String getArchitecture() {
         return System.getProperty( "os.arch" );
     }
-    
+
     /**
      * Returns the current target (operating system, version, and architecture).
      * @return
@@ -69,7 +69,7 @@ public class Platform {
     public static Target getTarget() {
         return new Target( getOS(), getOSVersion(), getArchitecture() );
     }
-    
+
     /**
      * An absolute path to the user's home directory.
      * If Java cannot determine the user's home directory, returns the working directory.
@@ -78,7 +78,15 @@ public class Platform {
     public static Path getHomeDirectory() {
         return Paths.get( System.getProperty( "user.home", "." ) ).toAbsolutePath();
     }
-    
+
+    /**
+     * Returns an absolute path to the current working directory.
+     * @return
+     */
+    public static Path getWorkingDirectory() {
+        return Paths.get( "" ).toAbsolutePath();
+    }
+
     /**
      * Returns an absolute path to the current Java executable.
      * @param withConsole Chooses an appropriate JRE executable based on whether or not a console is desired.
@@ -90,7 +98,7 @@ public class Platform {
         String executableName = getOS() == OperatingSystem.WINDOWS ? ( withConsole ? "java.exe" : "javaw.exe" ) : "java";
         return Paths.get( System.getProperty( "java.home" ) ).resolve( "bin" ).resolve( executableName ).toAbsolutePath();
     }
-    
+
     /**
      * Returns the version of Java the current JVM is using.
      * @return The java version.

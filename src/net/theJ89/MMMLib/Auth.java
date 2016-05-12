@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 import org.apache.commons.io.Charsets;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.Gson;
@@ -48,11 +47,11 @@ public class Auth {
         if( !Files.isRegularFile( path ) )
             return;
         
-        Auth.userdata = gson.fromJson( IOUtils.toString( Files.newInputStream( path ), Charsets.UTF_8 ), UserData.class );
+        Auth.userdata = gson.fromJson( Files.newBufferedReader( path, Charsets.UTF_8 ), UserData.class );
     }
     
     public static void saveSettings( Path path ) throws IOException {
-        IOUtils.write( gson.toJson( Auth.userdata ), Files.newOutputStream( path ), Charsets.UTF_8 );
+        gson.toJson( Auth.userdata, Files.newBufferedWriter( path, Charsets.UTF_8 ) );
     }
     
     public static UserData getUserData() {

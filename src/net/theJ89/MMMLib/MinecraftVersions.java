@@ -23,14 +23,10 @@ public class MinecraftVersions {
         gb.registerTypeAdapterFactory( new LowerCaseEnumTypeAdapterFactory() );
         gson = gb.create();
     }
-    
-    //Directories (relative to MMM's root) that version and asset info .json files are stored.
-    private static final String VERSIONS_DIRECTORY = "versions";
-    private static final String ASSETS_DIRECTORY   = "assets";
-    
+
     private static final Map< String, CompleteMinecraftVersion > versions = new HashMap< String, CompleteMinecraftVersion >();
     private static final Map< String, AssetIndex >               assets   = new HashMap< String, AssetIndex >();
-    
+
     /**
      * Return information about a version of Minecraft.
      * Loads the information if it isn't already.
@@ -44,7 +40,7 @@ public class MinecraftVersions {
             v = load( id );
         return v;
     }
-    
+
     /**
      * Returns the given asset index.
      * @return
@@ -55,7 +51,7 @@ public class MinecraftVersions {
             i = loadAssetIndex( id );
         return i;
     }
-    
+
     /**
      * Loads information about the requested Minecraft version.
      * @param version
@@ -63,13 +59,13 @@ public class MinecraftVersions {
      * @throws IOException
      */
     private static CompleteMinecraftVersion load( String id ) throws IOException {
-        CompleteMinecraftVersion v = gson.fromJson( Files.newBufferedReader( Paths.get( VERSIONS_DIRECTORY, id + ".json"   ) ), CompleteMinecraftVersion.class );
+        CompleteMinecraftVersion v = gson.fromJson( Files.newBufferedReader( Paths.get( MinecraftConstants.VERSIONS_DIRECTORY, id, id + ".json"   ) ), CompleteMinecraftVersion.class );
         v.validate( id );
-        
+
         versions.put( id, v );
         return v;
     }
-    
+
     /**
      * Loads an asset index with the given ID.
      * Note that the asset index ID is independent from Minecraft version; several versions of Minecraft may share the same asset index.
@@ -79,9 +75,9 @@ public class MinecraftVersions {
      * @throws IOException
      */
     private static AssetIndex loadAssetIndex( String id ) throws IOException {
-        AssetIndex i = gson.fromJson( Files.newBufferedReader( Paths.get( ASSETS_DIRECTORY, id + ".json" ) ), AssetIndex.class );
+        AssetIndex i = gson.fromJson( Files.newBufferedReader( Paths.get( MinecraftConstants.ASSETS_DIRECTORY, MinecraftConstants.ASSETS_INDICES_DIRECTORY, id + ".json" ) ), AssetIndex.class );
         i.validate();
-        
+
         assets.put( id, i );
         return i;
     }
