@@ -2,11 +2,11 @@ package net.theJ89.MMMLib;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.Gson;
@@ -47,11 +47,11 @@ public class Auth {
         if( !Files.isRegularFile( path ) )
             return;
         
-        Auth.userdata = gson.fromJson( Files.newBufferedReader( path, Charsets.UTF_8 ), UserData.class );
+        Auth.userdata = gson.fromJson( Files.newBufferedReader( path, StandardCharsets.UTF_8 ), UserData.class );
     }
     
     public static void saveSettings( Path path ) throws IOException {
-        gson.toJson( Auth.userdata, Files.newBufferedWriter( path, Charsets.UTF_8 ) );
+        gson.toJson( Auth.userdata, Files.newBufferedWriter( path, StandardCharsets.UTF_8 ) );
     }
     
     public static UserData getUserData() {

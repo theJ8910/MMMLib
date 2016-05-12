@@ -25,7 +25,6 @@ Building MMMLib
 ---------------
 <a name="TOC-BuildingMMMLib"></a>
 MMMLib has a few dependencies that need to be satisfied before building:
-* [Apache Commons IO](https://commons.apache.org/proper/commons-io/download_io.cgi) (2.4+)
 * [Apache Commons Lang](https://commons.apache.org/proper/commons-lang/download_lang.cgi) (3.4+)
 * [Gson](https://github.com/google/gson) (2.6.1+)
 * [SQLite JDBC](https://github.com/xerial/sqlite-jdbc) (3.8.11.2+)

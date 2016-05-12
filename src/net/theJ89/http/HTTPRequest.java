@@ -7,9 +7,9 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.IOUtils;
+import net.theJ89.util.Misc;
 
 public class HTTPRequest {
     HttpURLConnection connection;
@@ -48,7 +48,7 @@ public class HTTPRequest {
     }
     
     public HTTPResponse post( String data ) throws IOException {
-        return this.post( data.getBytes( Charsets.UTF_8 ) );
+        return this.post( data.getBytes( StandardCharsets.UTF_8 ) );
     }
     
     public HTTPResponse post( byte[] data ) throws IOException {
@@ -64,7 +64,7 @@ public class HTTPRequest {
             out = connection.getOutputStream();
             out.write( data );
         } finally {
-            IOUtils.closeQuietly( out );
+            Misc.closeQuietly( out );
         }
         
         return this.readResponse();
@@ -74,13 +74,13 @@ public class HTTPRequest {
         InputStream in = null;
         try {
             in = this.connection.getInputStream();
-            return new HTTPResponse( this.connection.getResponseCode(), IOUtils.toByteArray( in ) );
+            return new HTTPResponse( this.connection.getResponseCode(), Misc.toByteArray( in ) );
         } catch (IOException e) {
-            IOUtils.closeQuietly( in );
+            Misc.closeQuietly( in );
             in = this.connection.getErrorStream();
-            return new HTTPResponse( this.connection.getResponseCode(), IOUtils.toByteArray( in ) );
+            return new HTTPResponse( this.connection.getResponseCode(), Misc.toByteArray( in ) );
         } finally {
-            IOUtils.closeQuietly( in );
+            Misc.closeQuietly( in );
         }
     }
 }

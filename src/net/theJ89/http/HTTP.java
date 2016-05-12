@@ -4,9 +4,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-
-import org.apache.commons.io.Charsets;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -59,7 +58,7 @@ public class HTTP {
      */
     public static <E> HTTPResponse post( URL url, E object ) throws IOException {
         return new HTTPRequest( url )
-                  .setContentType( ContentType.APPLICATION_JSON, Charsets.UTF_8 )
+                  .setContentType( ContentType.APPLICATION_JSON, StandardCharsets.UTF_8 )
                   .post( object );
     }
     /**

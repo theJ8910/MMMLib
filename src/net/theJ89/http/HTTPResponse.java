@@ -1,6 +1,6 @@
 package net.theJ89.http;
 
-import org.apache.commons.io.Charsets;
+import java.nio.charset.StandardCharsets;
 
 public class HTTPResponse {
     private int status;
@@ -16,7 +16,7 @@ public class HTTPResponse {
     }
     
     public String getText() {
-        return new String( this.response, Charsets.UTF_8 );
+        return new String( this.response, StandardCharsets.UTF_8 );
     }
     
     //Expects response to be JSON. Deserializes the JSON into an object of the given type and returns it.
