@@ -1,4 +1,4 @@
-package net.theJ89.MMMLib;
+package net.theJ89.minecraft;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -29,78 +29,99 @@ import net.minecraft.launcher.updater.DownloadType;
 import net.minecraft.launcher.updater.Executable;
 import net.minecraft.launcher.updater.Library;
 import net.theJ89.http.HTTP;
+import net.theJ89.mmm.Side;
+import net.theJ89.util.IO;
 import net.theJ89.util.Platform;
 import net.theJ89.util.Target;
 
 public class MinecraftInstaller {
+    private static final String BASE_ASSETS_URL = "http://resources.download.minecraft.net/";
+    
     private static final Gson gson;
     static {
         GsonBuilder gb = new GsonBuilder();
         gb.registerTypeAdapter( Date.class, new DateTypeAdapter() );
         gb.registerTypeAdapterFactory( new LowerCaseEnumTypeAdapterFactory() );
+        gb.setPrettyPrinting();
+        //Needed because we're serializing enum maps, which have non-primitive keys.
+        //By enabling complex map serialization, map keys can be serialized by type adapters, instead of being converted directly to strings.
+        //This allows LowerCaseEnumTypeAdapterFactory convert the map keys to lower-case before they're written.
+        gb.enableComplexMapKeySerialization();
+        
         gson = gb.create();
     }
     
-    private static final String BASE_ASSETS_URL    = "http://resources.download.minecraft.net/";
+    private Path   directory;
+    private String name;
+    private Side   side;
     
-    private Instance                 instance;
-    private CompleteMinecraftVersion version;
-    private AssetIndex               assets;
-    private Path                     directory;
     
-    public MinecraftInstaller( Instance instance ) throws IOException {
-        this.instance  = instance;
-        this.version   = MinecraftVersions.get( instance.getMinecraftVersion() );
-        this.assets    = MinecraftVersions.getAssetIndex( this.version.getAssets() );
-        this.directory = instance.getDirectory();
+    /**
+     * MinecraftInstaller constructor.
+     * @param directory - Directory to install Minecraft to.
+     * @param name - The name of the Minecraft version to install (e.g. "1.7.10", "1.8.9")
+     * @param side - Which side to install (e.g. Side.CLIENT or Side.SERVER)
+     * @throws IOException
+     */
+    public MinecraftInstaller( final Path directory, final String name, final Side side ) {
+        this.directory = directory;
+        this.name      = name;
+        this.side      = side;
     }
     
     public void install() throws IOException {
-        String id      = this.version.getId();
-        String assetID = this.version.getAssets();
-        Side   side    = this.instance.getSide();
-        Target target  = Platform.getTarget();
+        Path                     directory = this.directory;
         
-        Map< DownloadType, Executable > downloads = this.version.getDownloads();
+        String                   name      = this.name;
+        CompleteMinecraftVersion version   = MinecraftVersions.get( name );
+        
+        String                   assetName = version.getAssets();
+        AssetIndex               assets    = MinecraftVersions.getAssetIndex( assetName );
+        
+        Side                     side      = this.side;
+        Target                   target    = Platform.getTarget();
+        
+        Map< DownloadType, Executable > downloads = version.getDownloads();
         if( side == Side.CLIENT ) {
             //Create versions/ directory
-            Path versionDir = this.directory.resolve( MinecraftConstants.VERSIONS_DIRECTORY ).resolve( id );
+            Path versionDir = directory.resolve( MinecraftConstants.VERSIONS_DIRECTORY ).resolve( name );
             Files.createDirectories( versionDir );
             
             //Download client executable
             Executable dl = downloads.get( DownloadType.CLIENT );
-            download( dl.getURL(), versionDir.resolve( id + ".jar" ), dl.getSha1() );
+            download( dl.getURL(), versionDir.resolve( name + ".jar" ), dl.getSha1() );
             
             //Create version info file
-            Path versionInfoPath = versionDir.resolve( id + ".json" );
+            Path versionInfoPath = versionDir.resolve( name + ".json" );
             System.out.println( "Creating version info file at \"" + versionInfoPath + "\"..." );
-            Writer writer = Files.newBufferedWriter( versionInfoPath );
-            try     { gson.toJson( this.version, writer ); }
-            finally { writer.close(); }
+            
+            try( Writer writer = IO.newBufferedU8FileWriter( versionInfoPath ) ) {
+                gson.toJson( version, writer );
+            }
             
             //Create assets/ directories
-            Path assetsDir     = this.directory.resolve( MinecraftConstants.ASSETS_DIRECTORY );
+            Path assetsDir     = directory.resolve( MinecraftConstants.ASSETS_DIRECTORY );
             Path assetsIndices = assetsDir.resolve( MinecraftConstants.ASSETS_INDICES_DIRECTORY );
             Files.createDirectories( assetsIndices );
             Path assetsObjects = assetsDir.resolve( MinecraftConstants.ASSETS_OBJECTS_DIRECTORY );
             Files.createDirectories( assetsObjects );
             
             //Create asset index file
-            Path assetIndexPath = assetsIndices.resolve( assetID + ".json" );
+            Path assetIndexPath = assetsIndices.resolve( assetName + ".json" );
             System.out.println( "Creating asset index file at \"" + assetIndexPath + "\"..." );
-            writer = Files.newBufferedWriter( assetIndexPath );
-            try     { gson.toJson( this.assets, writer ); }
-            finally { writer.close(); }
+            try( Writer writer = IO.newBufferedU8FileWriter( assetIndexPath ) ) {
+                gson.toJson( assets, writer );
+            }
             
             //Download assets
-            boolean virtual = this.assets.isVirtual();
+            boolean virtual = assets.isVirtual();
             if( virtual ) {
                 //Create assets/virtual/ directory
                 Path assetsVirtual = assetsDir.resolve( MinecraftConstants.ASSETS_VIRTUAL_DIRECTORY );
                 Files.createDirectories( assetsVirtual );
                 
                 //Download assets to the virtual directory according to their original paths
-                for( Entry< String, AssetObject> entry : this.assets.getObjects().entrySet() ) {
+                for( Entry< String, AssetObject> entry : assets.getObjects().entrySet() ) {
                     AssetObject asset = entry.getValue();
                     String path = asset.getPath();
                     
@@ -108,7 +129,7 @@ public class MinecraftInstaller {
                 }
             } else {
                 //Download assets to the objects directory according to their hashes
-                for( Entry< String, AssetObject> entry : this.assets.getObjects().entrySet() ) {
+                for( Entry< String, AssetObject> entry : assets.getObjects().entrySet() ) {
                     AssetObject asset = entry.getValue();
                     String path = asset.getPath();
                     
@@ -117,9 +138,10 @@ public class MinecraftInstaller {
             }
             
             //Download libraries
-            Path librariesDir = this.directory.resolve( MinecraftConstants.LIBRARIES_DIRECTORY );
-            Path nativesDir = this.directory.resolve( MinecraftConstants.NATIVES_DIRECTORY );
-            for( Library library : this.version.getLibraries() ) {
+            Path librariesDir = directory.resolve( MinecraftConstants.LIBRARIES_DIRECTORY );
+            Path nativesDir   = directory.resolve( MinecraftConstants.NATIVES_DIRECTORY );
+            
+            for( Library library : version.getLibraries() ) {
                 Artifact artifact = library.getArtifact( target );
                 if( artifact == null )
                     continue;
@@ -134,7 +156,7 @@ public class MinecraftInstaller {
         } else if( side == Side.SERVER ) {
             //Download server executable
             Executable dl = downloads.get( DownloadType.SERVER );
-            download( dl.getURL(), this.directory.resolve( "minecraft_server." + id + ".jar" ), dl.getSha1() );
+            download( dl.getURL(), directory.resolve( "minecraft_server." + name + ".jar" ), dl.getSha1() );
         }
     }
     

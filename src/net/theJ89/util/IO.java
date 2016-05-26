@@ -1,0 +1,243 @@
+package net.theJ89.util;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.RandomAccessFile;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
+import java.util.jar.JarOutputStream;
+import java.util.zip.ZipFile;
+
+public class IO {
+    /**
+     * Closes the given closeable.
+     * Does nothing if the given closeable is null.
+     * @param closeable - The closeable to close.
+     * @throws Exception If an exception occurs when while closing.
+     */
+    public static void close( final AutoCloseable closeable ) throws Exception {
+        if( closeable != null )
+            closeable.close();
+    }
+    
+    /**
+     * Closes the given closeable.
+     * If an exception occurs while closing, it is printed to the standard error stream.
+     * Does nothing if the given closeable is null.
+     * 
+     * @param closeable - The closeable to close.
+     */
+    public static void closeNoisily( final AutoCloseable closeable ) {
+        try {
+            if( closeable != null )
+                closeable.close();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+    
+    /**
+     * Closes the given closeable.
+     * If an exception occurs while closing, it is ignored.
+     * Does nothing if the given closeable is null.
+     * 
+     * Borrowed from Apache IOUtils
+     * 
+     * @param closeable - The closeable to close.
+     */
+    public static void closeQuietly( final AutoCloseable closeable ) {
+        try {
+            if( closeable != null )
+                closeable.close();
+        } catch (Exception e) {}
+    }
+    
+    /**
+     * Returns a new buffered InputStream to the file at the given path.
+     * @param path
+     * @return
+     * @throws IOException
+     */
+    public static InputStream newBufferedFileInputStream( final Path path ) throws IOException {
+        return new BufferedInputStream( Files.newInputStream( path ) );
+    }
+    
+    /**
+     * Returns a new buffered JarInputStream ot the file at the given path.
+     * @param path
+     * @return
+     * @throws IOException
+     */
+    public static JarInputStream newBufferedJarFileInputStream( final Path path ) throws IOException {
+        return new JarInputStream( new BufferedInputStream( Files.newInputStream( path) ) );
+    }
+
+    /**
+     * Returns a new buffered OutputStream to the file at the given path. 
+     * @param path
+     * @return
+     * @throws IOException
+     */
+    public static OutputStream newBufferedFileOutputStream( final Path path ) throws IOException {
+        return new BufferedOutputStream( Files.newOutputStream( path ) );
+    }
+    
+    /**
+     * Returns an ew buffered JarOutputStream to the file at the given path.
+     * @param path
+     * @return
+     * @throws IOException
+     */
+    public static JarOutputStream newBufferedJarFileOutputStream( final Path path ) throws IOException {
+        return new JarOutputStream( new BufferedOutputStream( Files.newOutputStream( path ) ) );
+    }
+
+    /**
+     * Returns a new BufferedReader that reads UTF-8 characters from the given input stream.
+     * @param in
+     * @return
+     */
+    public static Reader newBufferedU8ISReader( final InputStream in ) {
+        return new BufferedReader( new InputStreamReader( in, StandardCharsets.UTF_8 ) );
+    }
+    
+    /**
+     * Returns a new BufferedReader that reads UTF-8 characters from the file at the given path.
+     * @param path
+     * @return
+     * @throws IOException
+     */
+    public static Reader newBufferedU8FileReader( final Path path ) throws IOException {
+        return Files.newBufferedReader( path, StandardCharsets.UTF_8 );
+    }
+    
+    /**
+     * Returns a new BufferedWriter that writes UTF-8 characters to the given output stream.
+     * @param out
+     * @return
+     * @throws IOException
+     */
+    public static Writer newBufferedU8OSWriter( final OutputStream out ) throws IOException {
+        return new BufferedWriter( new OutputStreamWriter( out, StandardCharsets.UTF_8 ) );
+    }
+    
+    /**
+     * Returns a new BufferedWriter that writes UTF-8 characters to the file at the given path.
+     * @param path
+     * @return
+     * @throws IOException
+     */
+    public static Writer newBufferedU8FileWriter( final Path path ) throws IOException {
+        return Files.newBufferedWriter( path, StandardCharsets.UTF_8 );
+    }
+    
+    /**
+     * Reads all bytes from the given input stream into a byte array and returns it.
+     * 
+     * Borrowed from Apache IOUtils
+     * 
+     * @param in - The input stream to read from.
+     */
+    public static byte[] toByteArray( final InputStream in ) throws IOException {
+        //Read 4096 bytes at a time into the byte array output stream
+        ByteArrayOutputStream out = new ByteArrayOutputStream( 1024 );
+        byte[] buf = new byte[4096];
+        int c = 0;
+        while( ( c = in.read( buf ) ) != -1 )
+            out.write( buf, 0, c );
+        return out.toByteArray();
+    }
+    
+    /**
+     * Copies everything in the given input stream to the given output stream.
+     * 
+     * @param in
+     * @param out
+     * @throws IOException
+     */
+    public static void copy( final InputStream in, final OutputStream out ) throws IOException {
+        byte[] buf = new byte[4096];
+        int c;
+        while( ( c = in.read( buf ) ) != -1 )
+            out.write( buf, 0, c );
+    }
+    
+    /**
+     * Reads len bytes from the given RandomAccessFile at the given position
+     * and returns a byte array containing the bytes we read.
+     * @param raf
+     * @param pos
+     * @param len
+     * @throws IOException - If the end of file is encounted before len bytes are read
+     */
+    public static byte[] read( final RandomAccessFile raf, final long pos, int len ) throws IOException {
+        raf.seek( pos );
+        
+        byte[] buf = new byte[len];
+        int offset = 0;
+        int c;
+        while( len > 0 ) {
+            c = raf.read( buf, offset, len );
+            if( c == -1 )
+                throw new IOException( "End of file reached." );
+            offset += c;
+            len    -= c;
+        }
+        return buf;
+    }
+
+    /**
+     * Reads len bytes from the given RandomAccessFile at the given position
+     * and writes them to the given output stream.
+     * 
+     * @param raf
+     * @param out
+     * @param pos
+     * @param len
+     * @throws IOException
+     */
+    public static void copy( final RandomAccessFile raf, final OutputStream out, final long pos, int len ) throws IOException {
+        raf.seek( pos );
+        
+        byte buf[] = new byte[4096];
+        int c;
+        while( len > 0 ) {
+            c = raf.read( buf );
+            if( c == -1 )
+                throw new IOException( "End of file reached." );
+            out.write( buf, 0, c );
+            len -= c;
+        }
+    }
+    
+    /**
+     * Returns a ZipFile or JarFile, depending on the extension of the given file.
+     * @param path
+     * @return
+     * @throws IOException
+     */
+    public static ZipFile getZipFile( Path path ) throws IOException {
+        String extension = Misc.getExtension( path.toString() );
+        File f = path.toFile();
+        switch( extension ) {
+        case "zip":
+            return new ZipFile( f );
+        case "jar":
+            return new JarFile( f );
+        default:
+            throw new RuntimeException( "Unrecognized extension." );
+        }
+    }
+}

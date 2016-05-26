@@ -5,14 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang3.text.StrSubstitutor;
-
 import com.mojang.launcher.versions.CompatibilityRule;
 import com.mojang.launcher.versions.CompatibilityRule.Action;
 import com.mojang.launcher.versions.ExtractRules;
 
 import net.theJ89.util.OperatingSystem;
 import net.theJ89.util.Platform;
+import net.theJ89.util.StrSubstitutor;
 import net.theJ89.util.Target;
 
 public class Library {
@@ -210,5 +209,10 @@ public class Library {
         if( this.downloads == null )
             throw new RuntimeException( "downloads is null." );
         this.downloads.validate( this.name, this.natives );
+    }
+    
+    @Override
+    public String toString() {
+        return this.getName();
     }
 }

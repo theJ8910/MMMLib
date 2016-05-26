@@ -23,4 +23,9 @@ public class Target {
     public String getArch() {
         return this.arch;
     }
+    
+    @Override
+    public String toString() {
+        return String.format( "%s %s (%s)", this.os.getName(), this.version, this.arch );
+    }
 }

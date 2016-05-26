@@ -1,4 +1,4 @@
-package net.theJ89.MMMLib;
+package net.theJ89.minecraft;
 
 public class MinecraftConstants {
     //Note: The following directories (versions, libraries, natives) are relative to the instance directory:

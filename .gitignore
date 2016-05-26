@@ -8,3 +8,5 @@ instances/
 versions/
 temp/
 userdata.json
+forge.db
+minecraft.db

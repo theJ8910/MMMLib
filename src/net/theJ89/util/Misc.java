@@ -1,40 +1,122 @@
 package net.theJ89.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 public class Misc {
+    private static final Pattern RE_MD5  = Pattern.compile( "^[0-9a-fA-F]{32}$" );
+    private static final Pattern RE_SHA1 = Pattern.compile( "^[0-9a-fA-F]{40}$" );
+    
     /**
-     * Closes the given closeable.
-     * If an exception occurs while closing, it is ignored.
-     * 
-     * Borrowed from Apache IOUtils
-     * 
-     * @param closeable - The closeable to close
+     * Same as {@link #getExtension(Path)} but takes a String for the path.
+     * @param path
+     * @return
      */
-    public static void closeQuietly( Closeable closeable ) {
-        try {
-            if( closeable != null )
-                closeable.close();
-        } catch (IOException e) {}
+    public static String getExtension( final String path ) {
+        return getExtension( Paths.get( path ) );
     }
     
     /**
-     * Reads all bytes from the given input stream into a byte array and returns it.
+     * Returns the extension of the file described by the given path.
+     * The returned extension will always be in lowercase. The leading dot is omitted.
+     * Returns "" if the extension could not be determined.
      * 
-     * Borrowed from Apache IOUtils
-     * 
-     * @param in - The input stream to read from.
+     * This function defines the extension of the given path to be the substring between the last dot and the end of the string.
+     * e.g. getExtension( "mydir/myfile.tar.gz" ) would return "gz".
+     * @param path
+     * @return
      */
-    public static byte[] toByteArray( InputStream in ) throws IOException {
-        //Read 4096 bytes at a time into the byte array output stream
-        ByteArrayOutputStream out = new ByteArrayOutputStream( 1024 );
-        byte[] buf = new byte[4096];
-        int n = 0;
-        while( ( n = in.read( buf ) ) != -1 )
-            out.write( buf, 0, n );
-        return out.toByteArray();
+    public static String getExtension( final Path path ) {
+        //Reduce path to filename
+        String filename = path.getFileName().toString();
+        
+        //Find last dot (if any)
+        int idx = filename.lastIndexOf( "." );
+        if( idx == -1 )
+            return "";
+        
+        //Extract the extension (idx + 1 to not include the dot)
+        return filename.substring( idx + 1 ).toLowerCase();
+    }
+    
+    /**
+     * Same as {@link #getFileNameNoExtension(Path)} but takes a String for the path.
+     * @param path
+     * @return
+     */
+    public static String getFileNameNoExtension( final String path ) {
+        return getFileNameNoExtension( Paths.get( path ) );
+    }
+    
+    /**
+     * Returns the filename of the file described by the given path without the extension (if any).
+     * 
+     * This function defines the extension of the given path to be the substring between the last dot and the end of the string.
+     * @param path
+     * @return
+     */
+    public static String getFileNameNoExtension( final Path path ) {
+        //Reduce path to filename
+        String filename = path.getFileName().toString();
+        
+        //Find last dot (if any)
+        int idx = filename.lastIndexOf( "." );
+        if( idx == -1 )
+            return filename;
+        
+        //Trim the extension from the filename
+        return filename.substring( 0, idx );
+    }
+    
+    /**
+     * Same as {@link #splitFilename(Path)} but takes a String for the path.
+     * @param path
+     * @return
+     */
+    public static String[] splitFilename( final String path ) {
+        return splitFilename( Paths.get( path ) );
+    }
+    
+    /**
+     * Takes a path and returns an array of two strings: { filename, extension }
+     * 
+     * This function defines the extension of the given path to be the substring between the last dot and the end of the string.
+     * @param path
+     * @return
+     */
+    public static String[] splitFilename( final Path path ) {
+        String filename = path.getFileName().toString();
+        
+        //Find last dot (if any)
+        int idx = filename.lastIndexOf( "." );
+        if( idx == -1 )
+            return new String[] { filename, "" };
+        
+        //Return filename and extension
+        return new String[] {
+            filename.substring( 0, idx ),
+            filename.substring( idx + 1 ).toLowerCase()
+        };
+    }
+    
+    /**
+     * Returns true if the given string represents a valid MD5 hash in hexadecimal form, false otherwise.
+     * This function is non-case sensitive.
+     * @param md5 - The string to check
+     * @return
+     */
+    public static boolean isValidMD5( final String md5 ) {
+        return RE_MD5.matcher( md5 ).matches();
+    }
+    
+    /**
+     * Returns true if the given string represents a valid SHA1 hash in hexadecimal form, false otherwise.
+     * This function is non-case sensitive.
+     * @param sha1 - The string to check
+     * @return
+     */
+    public static boolean isValidSHA1( final String sha1 ) {
+        return RE_SHA1.matcher( sha1 ).matches();
     }
 }

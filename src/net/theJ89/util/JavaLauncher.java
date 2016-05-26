@@ -1,4 +1,4 @@
-package net.theJ89.MMMLib;
+package net.theJ89.util;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -9,11 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.lang3.JavaVersion;
-
-import net.theJ89.util.Platform;
-import net.theJ89.util.Size;
 
 public class JavaLauncher {
     private static long    MAX_JAVA32_MEMORY = 4 * Size.GIGABYTE;
@@ -456,7 +451,7 @@ public class JavaLauncher {
         
         //Construct JVM library path from list of library paths we may have been given
         if( this.libraryPaths != null )
-            commandLine.add( "-Djava.library.path=\"" + String.join( ";", this.libraryPaths ) + "\"" );
+            commandLine.add( "\"-Djava.library.path=" + String.join( ";", this.libraryPaths ) + "\"" );
         
         //Add any other JVM arguments we may have been given
         if( this.otherJVMArguments != null )
@@ -497,7 +492,7 @@ public class JavaLauncher {
         
         //Finally, launch Java.
         pb.inheritIO();
-        try                    {pb.start();           }
+        try                    { pb.start();          }
         catch( IOException e ) { e.printStackTrace(); }
     }
 }

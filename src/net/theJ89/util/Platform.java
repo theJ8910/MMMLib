@@ -3,8 +3,6 @@ package net.theJ89.util;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.apache.commons.lang3.JavaVersion;
-
 public class Platform {
     /**
      * If this is true, we manually set the operating system name and version to Windows 10.
@@ -78,6 +76,28 @@ public class Platform {
     public static Path getHomeDirectory() {
         return Paths.get( System.getProperty( "user.home", "." ) ).toAbsolutePath();
     }
+    
+    /**
+     * An absolute path to the user's application data directory.
+     * These are all relative to the user's home directory.
+     * On Windows, this is %APPDATA% (e.g. C:/Users/Owner/AppData/Roaming) or the user's home directory.
+     * On Mac OS X, this is ~/Library/Application Support/ (e.g. /home/Owner/Library/Application Support).
+     * On all other platforms, this is the same as the user's home directory (e.g. /home/owner).
+     * @return The user's application data directory.
+     */
+    public static Path getAppDataDirectory() {
+        Path home = Platform.getHomeDirectory();
+        switch( Platform.getOS() ) {
+        case WINDOWS:
+            String appdata = System.getenv("APPDATA");
+            return appdata != null ? Paths.get( appdata ) : home;
+        case OSX:
+            return home.resolve( "Library" ).resolve( "Application Support" );
+        case LINUX:
+        default:
+            return home;
+        }
+    }
 
     /**
      * Returns an absolute path to the current working directory.
@@ -100,15 +120,10 @@ public class Platform {
     }
 
     /**
-     * Returns the version of Java the current JVM is using.
+     * Returns the version of Java the current JVM is using, or null if the version cannot be determined.
      * @return The java version.
      */
     public static JavaVersion getJavaVersion() {
-        String[] parts = System.getProperty( "java.version" ).split( "\\." );
-        try{
-            return JavaVersion.valueOf( "JAVA_" + parts[0] + "_" + parts[1] );
-        } catch( IllegalArgumentException e ) {
-            return JavaVersion.JAVA_RECENT;
-        }
+        return JavaVersion.get( System.getProperty( "java.version" ) );
     }
 }

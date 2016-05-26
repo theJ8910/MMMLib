@@ -43,7 +43,7 @@ public class LowerCaseEnumTypeAdapterFactory implements TypeAdapterFactory {
             public void write(JsonWriter out, T value) throws IOException {
                 //An enum value can either be an enum constant or null
                 if( value != null ) { out.value( value.toString().toLowerCase( Locale.US ) ); }
-                else                { out.nullValue();                             }
+                else                { out.nullValue();                                        }
             }
             @Override
             public T read(JsonReader in) throws IOException {

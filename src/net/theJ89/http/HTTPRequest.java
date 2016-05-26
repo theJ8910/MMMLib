@@ -9,7 +9,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import net.theJ89.util.Misc;
+import net.theJ89.util.IO;
 
 public class HTTPRequest {
     HttpURLConnection connection;
@@ -35,6 +35,13 @@ public class HTTPRequest {
         return this;
     }
     
+    public HTTPResponse head() throws IOException {
+        try { this.connection.setRequestMethod( "HEAD" ); }
+        catch( ProtocolException e ) { throw new Error( e ); }
+        
+        return this.readResponse();
+    }
+    
     public HTTPResponse get() throws IOException {
         try                          { this.connection.setRequestMethod( "GET" ); }
         catch( ProtocolException e ) { throw new Error( e ); }
@@ -42,7 +49,7 @@ public class HTTPRequest {
         return this.readResponse();
     }
     
-    //Serializes the given object to
+    //Serializes the given object to JSON
     public <E> HTTPResponse post( E object ) throws IOException {
         return post( HTTP.gson.toJson( object ) );
     }
@@ -59,12 +66,8 @@ public class HTTPRequest {
         connection.setDoOutput( true );
         
         //Write POST data
-        OutputStream out = null;
-        try {
-            out = connection.getOutputStream();
+        try( OutputStream out = connection.getOutputStream() ) {
             out.write( data );
-        } finally {
-            Misc.closeQuietly( out );
         }
         
         return this.readResponse();
@@ -74,13 +77,12 @@ public class HTTPRequest {
         InputStream in = null;
         try {
             in = this.connection.getInputStream();
-            return new HTTPResponse( this.connection.getResponseCode(), Misc.toByteArray( in ) );
-        } catch (IOException e) {
-            Misc.closeQuietly( in );
+            long contentLength = this.connection.getContentLengthLong();
+            return new HTTPResponse( this.connection.getResponseCode(), contentLength != -1 ? contentLength : null, in );
+        } catch( IOException e ) {
+            IO.closeQuietly( in );
             in = this.connection.getErrorStream();
-            return new HTTPResponse( this.connection.getResponseCode(), Misc.toByteArray( in ) );
-        } finally {
-            Misc.closeQuietly( in );
+            return new HTTPResponse( this.connection.getResponseCode(), null, in );
         }
     }
 }

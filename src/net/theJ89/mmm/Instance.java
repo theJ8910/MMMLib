@@ -1,7 +1,12 @@
-package net.theJ89.MMMLib;
+package net.theJ89.mmm;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
+import net.minecraft.launcher.updater.CompleteMinecraftVersion;
+import net.theJ89.minecraft.MinecraftConstants;
+import net.theJ89.minecraft.MinecraftLauncher;
+import net.theJ89.minecraft.MinecraftVersions;
 import net.theJ89.util.Size2D;
 
 public class Instance {
@@ -12,10 +17,10 @@ public class Instance {
     private Path    directory;
     
     //Per-instance JVM arguments
-    private Long    initialHeapSize;
-    private Long    maxHeapSize;
-    private Long    nurserySize;
-    private Long    metaspaceSize;
+    private Long      initialHeapSize;
+    private Long      maxHeapSize;
+    private Long      nurserySize;
+    private Long      metaspaceSize;
     
     //Game arguments
     private Size2D  resolution;
@@ -93,5 +98,33 @@ public class Instance {
     
     public Size2D getResolution() {
         return this.resolution;
+    }
+    
+    public void launch( final String version, final UserData userdata ) throws IOException {
+        MinecraftLauncher l = new MinecraftLauncher();
+        
+        Path directory = this.directory;
+
+        CompleteMinecraftVersion cmv = MinecraftVersions.load( directory.resolve( MinecraftConstants.VERSIONS_DIRECTORY ), version );
+        l.setVersion( cmv );
+        l.setSide( this.side );
+        l.setUserData( userdata );
+
+        l.setGameDirectory( directory );
+        l.setVersionsDirectory( directory.resolve( MinecraftConstants.VERSIONS_DIRECTORY ) );
+        l.setLibrariesDirectory( directory.resolve( MinecraftConstants.LIBRARIES_DIRECTORY ) );
+        l.setNativesDirectory( directory.resolve( MinecraftConstants.NATIVES_DIRECTORY ) );
+        l.setAssetsDirectory( directory.resolve( MinecraftConstants.ASSETS_DIRECTORY ) );
+
+        l.setProfileName( this.name );
+
+        l.setNurserySize( this.nurserySize );
+        l.setInitialHeapSize( this.initialHeapSize );
+        l.setMaxHeapSize( this.maxHeapSize );
+        l.setMetaspaceSize( this.metaspaceSize );
+        
+        l.setResolution( this.resolution );
+
+        l.launch();
     }
 }

@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.authlib.yggdrasil.response.Response;
+import com.mojang.launcher.updater.LowerCaseEnumTypeAdapterFactory;
 import com.mojang.util.ResponseDeserializer;
 import com.mojang.util.UUIDTypeAdapter;
 
@@ -21,6 +22,7 @@ public class HTTP {
         gb.registerTypeAdapter( UUID.class,        new UUIDTypeAdapter()        );
         gb.registerTypeAdapter( Response.class,    new ResponseDeserializer()   );
         gb.registerTypeAdapter( PropertyMap.class, new PropertyMap.Serializer() );
+        gb.registerTypeAdapterFactory( new LowerCaseEnumTypeAdapterFactory() );
         gson = gb.create();
     }
     
@@ -36,6 +38,16 @@ public class HTTP {
         } catch( MalformedURLException e ) {
             throw new Error( "Invalid URL: " + url, e );
         }
+    }
+    
+    /**
+     * Convenience function to perform a HEAD request to the given URL.
+     * @param url - Target URL for the request.
+     * @return HTTPResponse - Result of the request.
+     * @throws IOException
+     */
+    public static HTTPResponse head( URL url ) throws IOException {
+        return new HTTPRequest( url ).head();
     }
     
     /**

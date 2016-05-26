@@ -1,5 +1,6 @@
 package net.minecraft.launcher.updater;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
@@ -18,14 +19,15 @@ public class CompleteMinecraftVersion {
     private String                        mainClass;
     private String                        minecraftArguments;
     private int                           minimumLauncherVersion;
+    private String                        inheritsFrom;
+    private String                        jar;
     private Date                          time;
     private Date                          releaseTime;
     
+    
     //Note: currently not present within any version info .json:
-    //private String inheritsFrom;
     //private String incompatibilityReason;
     //private List<CompatibilityRule> compatibilityRules;
-    //private String jar;
     //private CompleteMinecraftVersion savableVersion;
     
     public String getId() {
@@ -60,6 +62,25 @@ public class CompleteMinecraftVersion {
         return this.minimumLauncherVersion;
     }
     
+    public String getInheritsFrom() {
+        return this.inheritsFrom;
+    }
+    
+    public String getJar() {
+        return this.jar;
+    }
+    
+    /**
+     * Returns the name of the version whose .jar file should be used to launch this version.
+     * If a jar override hasn't been set, returns the name of this version.
+     * @return
+     */
+    public String resolveJar() {
+        if( this.jar == null )
+            return this.id;
+        return this.jar;
+    }
+    
     public Date getTime() {
         return this.time;
     }
@@ -82,6 +103,47 @@ public class CompleteMinecraftVersion {
     
     public boolean hasWindowsServer() {
         return this.downloads.containsKey( DownloadType.WINDOWS_SERVER );
+    }
+    
+    public void inherit( CompleteMinecraftVersion parent ) {
+        if( this.type == null )
+            this.type = parent.type;
+        if( this.assets == null )
+            this.assets = parent.assets;
+        if( this.assetIndex == null )
+            this.assetIndex = parent.assetIndex;
+        
+        if( this.downloads == null ) {
+            this.downloads = parent.downloads;
+        } else if( parent.downloads != null ) {
+            Map< DownloadType, Executable > newDownloads = new EnumMap< DownloadType, Executable >( parent.downloads ); 
+            newDownloads.putAll( this.downloads );
+            this.downloads = newDownloads;
+        }
+        
+        if( this.libraries == null ) {
+            this.libraries = parent.libraries;
+        } else if( parent.libraries != null ) {
+            List<Library> newLibraries = new ArrayList< Library >( parent.libraries );
+            newLibraries.addAll( this.libraries );
+            this.libraries = newLibraries;
+        }
+        
+        if( this.mainClass == null )
+            this.mainClass = parent.mainClass;
+        
+        if( this.minecraftArguments == null )
+            this.minecraftArguments = parent.minecraftArguments;
+        
+        if( this.inheritsFrom == null )
+            this.inheritsFrom = parent.id;
+        if( this.jar == null )
+            this.jar = parent.jar;
+        
+        if( this.time == null )
+            this.time = parent.time;
+        if( this.releaseTime == null )
+            this.releaseTime = parent.releaseTime;
     }
     
     /**

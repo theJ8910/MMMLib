@@ -1,13 +1,14 @@
-package net.theJ89.MMMLib;
+package net.theJ89.mmm;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.UUID;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
@@ -47,11 +48,15 @@ public class Auth {
         if( !Files.isRegularFile( path ) )
             return;
         
-        Auth.userdata = gson.fromJson( Files.newBufferedReader( path, StandardCharsets.UTF_8 ), UserData.class );
+        try( Reader reader = Files.newBufferedReader( path, StandardCharsets.UTF_8 ) ) {
+            Auth.userdata = gson.fromJson( reader, UserData.class );
+        }
     }
     
     public static void saveSettings( Path path ) throws IOException {
-        gson.toJson( Auth.userdata, Files.newBufferedWriter( path, StandardCharsets.UTF_8 ) );
+        try( Writer writer = Files.newBufferedWriter( path, StandardCharsets.UTF_8 ) ) {
+            gson.toJson( Auth.userdata, writer );
+        }
     }
     
     public static UserData getUserData() {
@@ -175,7 +180,7 @@ public class Auth {
         }
         catch( UserMigratedException e ) { throw e; } 
         catch( InvalidCredentialsException e ) {
-            if( StringUtils.equals( e.getMessage(), "Invalid token." ) )
+            if( Objects.equals( e.getMessage(), "Invalid token." ) )
                 return false;
             throw e;
         }
@@ -196,9 +201,9 @@ public class Auth {
             
             if( any_res instanceof ErrorResponse ) {
                 ErrorResponse res = (ErrorResponse) any_res;
-                if(      StringUtils.equals( res.getCause(), "UserMigratedException" ) )       throw new UserMigratedException(       res.getErrorMessage() );
-                else if( StringUtils.equals( res.getError(), "ForbiddenOperationException" ) ) throw new InvalidCredentialsException( res.getErrorMessage() );
-                else                                                                           throw new AuthenticationException(     res.getErrorMessage() );
+                if(      Objects.equals( res.getCause(), "UserMigratedException" ) )       throw new UserMigratedException(       res.getErrorMessage() );
+                else if( Objects.equals( res.getError(), "ForbiddenOperationException" ) ) throw new InvalidCredentialsException( res.getErrorMessage() );
+                else                                                                       throw new AuthenticationException(     res.getErrorMessage() );
             }
         }
         catch( IOException e )                                { throw new AuthenticationUnavailableException( e ); }
@@ -227,9 +232,9 @@ public class Auth {
             //If we received an ErrorResponse, throw an appropriate AuthenticationException.
             if( any_res instanceof ErrorResponse ) {
                 ErrorResponse res = (ErrorResponse) any_res;
-                if(      StringUtils.equals( res.getCause(), "UserMigratedException" ) )       throw new UserMigratedException(       res.getErrorMessage() );
-                else if( StringUtils.equals( res.getError(), "ForbiddenOperationException" ) ) throw new InvalidCredentialsException( res.getErrorMessage() );
-                else                                                                           throw new AuthenticationException(     res.getErrorMessage() );
+                if(      Objects.equals( res.getCause(), "UserMigratedException" ) )       throw new UserMigratedException(       res.getErrorMessage() );
+                else if( Objects.equals( res.getError(), "ForbiddenOperationException" ) ) throw new InvalidCredentialsException( res.getErrorMessage() );
+                else                                                                       throw new AuthenticationException(     res.getErrorMessage() );
             //Otherwise, try to cast the response to the response we expect. Throws a ClassCastException if it's different from what we expect.
             } else {
                 return expectedResponseClass.cast( any_res );

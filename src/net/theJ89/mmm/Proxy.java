@@ -1,4 +1,4 @@
-package net.theJ89.MMMLib;
+package net.theJ89.mmm;
 
 public class Proxy {
     private static Proxy proxy;

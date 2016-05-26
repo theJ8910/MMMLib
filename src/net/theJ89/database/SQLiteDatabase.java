@@ -13,13 +13,18 @@ public class SQLiteDatabase implements AutoCloseable {
     
     private Connection connection;
     
+    @FunctionalInterface
+    public static interface Transaction {
+        void run() throws SQLException;
+    }
+    
     /**
      * Constructor for an SQLite database.
      * @param databaseFilepath - filename of the database file to open (e.g. sample.db). Creates the file if it doesn't exist.
      * @throws ClassNotFoundException If the SQlite JDBC connector wasn't found.
      * @throws SQLException If there was a problem connecting to the database.
      */
-    public SQLiteDatabase( Path databaseFilepath ) throws ClassNotFoundException, SQLException {
+    public SQLiteDatabase( final Path databaseFilepath ) throws ClassNotFoundException, SQLException {
         this.connection = null;
         
         //Make sure we have the connector class available
@@ -44,7 +49,7 @@ public class SQLiteDatabase implements AutoCloseable {
      * @return The prepared statement.
      * @throws SQLException If the database is closed.
      */
-    public PreparedStatement createPreparedStatement( String query ) throws SQLException {
+    public PreparedStatement createPreparedStatement( final String query ) throws SQLException {
         return this.connection.prepareStatement( query );
     }
     
@@ -72,6 +77,25 @@ public class SQLiteDatabase implements AutoCloseable {
     public void rollbackTransaction() throws SQLException {
         this.connection.rollback();
         this.connection.setAutoCommit( true );
+    }
+    
+    /**
+     * Run the given Transaction object, which is expected to perform a series of queries involving this database.
+     * Commit the transaction if the given Transaction executes without throwing an exception.
+     * Otherwise, roll back the transaction and rethrow the exception.
+     * @param transaction - The transaction to perform (you can provide a lambda expression for this parameter).
+     * @throws SQLException
+     */
+    public void performTransaction( final Transaction transaction ) throws SQLException {
+        this.beginTransaction();
+        try {
+            transaction.run();
+            this.commitTransaction();
+        } catch( Throwable t ) {
+            try { this.rollbackTransaction(); }
+            catch( SQLException e ) { t.addSuppressed( e ); }
+            throw t;
+        }
     }
     
     /**
