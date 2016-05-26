@@ -14,9 +14,11 @@ import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.io.Writer;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
@@ -172,6 +174,33 @@ public class IO {
         int c;
         while( ( c = in.read( buf ) ) != -1 )
             out.write( buf, 0, c );
+    }
+    
+    /**
+     * Same as {@link #copy(InputStream, OutputStream)}, but if hash is not null, computes a SHA-1 hash of the data as it passes from in to out.
+     * After the data has been fully read, the computed hash is compared to the given hash.
+     * A RuntimeException is generated if the hashes do not match.
+     * @param in
+     * @param out
+     * @param hash
+     * @throws IOException
+     */
+    public static void copyAndSHA1( final InputStream in, final OutputStream out, final String hash ) throws IOException {
+        if( hash == null ) {
+            copy( in, out );
+            return;
+        }
+        
+        byte[] buf = new byte[4096];
+        int c;
+        MessageDigest sha1 = Misc.newSHA1();
+        while( ( c = in.read( buf ) ) != -1 ) {
+            out.write( buf, 0, c );
+            sha1.update( buf, 0, c );
+        }
+        String computedHash = String.format( "%040x", new BigInteger( 1, sha1.digest() ) );
+        if( !computedHash.equals( hash ) )
+            throw new RuntimeException( "SHA-1 hash (" + computedHash + ") doesn't match expected hash (" + hash + ")." );
     }
     
     /**

@@ -1,13 +1,11 @@
 package net.theJ89.minecraft;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Writer;
-import java.math.BigInteger;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Map;
@@ -29,6 +27,7 @@ import net.minecraft.launcher.updater.DownloadType;
 import net.minecraft.launcher.updater.Executable;
 import net.minecraft.launcher.updater.Library;
 import net.theJ89.http.HTTP;
+import net.theJ89.http.HTTPResponse;
 import net.theJ89.mmm.Side;
 import net.theJ89.util.IO;
 import net.theJ89.util.Platform;
@@ -164,17 +163,19 @@ public class MinecraftInstaller {
         //TODO
     }
     
-    public void download( URL url, Path path, String sha1 ) throws IOException {
+    public void download( final URL url, final Path path, final String sha1 ) throws IOException {
         if( Files.exists( path ) )
             return;
-        System.out.println( "Downloading: " + url );
-        byte[] response = HTTP.get( url ).getResponse();
-        String responseSHA1 = computeSHA1( response );
-        if( !sha1.equals( responseSHA1 ) )
-            throw new RuntimeException( "Downloaded of \"" + url + "\" failed: SHA1 hash (" + responseSHA1 + ") doesn't match expected hash (" + sha1 + ")." );
-        System.out.println( "Success. Installing to: " + path );
+        System.out.println( "Downloading " + url + " to " + path + ":" );
         Files.createDirectories( path.getParent() );
-        Files.write( path, response );
+        try(
+            HTTPResponse res = HTTP.get( url );
+            OutputStream out = IO.newBufferedFileOutputStream( path )
+        ) {
+            if( !res.ok() )
+                throw new RuntimeException( "Error downloading \"" + url + "\"." );
+            IO.copyAndSHA1( res.getInputStream(), out, sha1 );
+        }
     }
     
     public void extract( Path jar, Path dir, ExtractRules rules ) throws IOException {
@@ -208,13 +209,5 @@ public class MinecraftInstaller {
         } finally {
             jarfile.close();
         }
-    }
-    
-    private String computeSHA1( byte[] bytes ) {
-        try {
-            MessageDigest md = MessageDigest.getInstance( "SHA-1" );
-            md.reset();
-            return String.format( "%040x", new BigInteger( 1, md.digest( bytes ) ) );
-        } catch (NoSuchAlgorithmException e) { throw new Error( e ); }
     }
 }

@@ -199,11 +199,18 @@ public class ForgeInstaller {
         
         //Download the file if it doesn't already exist.
         System.out.println( "Downloading Forge binary from \"" + url + "\" to temporary location \"" + path + "\"..." );
-        try( HTTPResponse res = HTTP.get( url ) ) {
+        try(
+            HTTPResponse res = HTTP.get( url );
+            OutputStream out = IO.newBufferedFileOutputStream( path )
+        ) {
             if( !res.ok() )
                 throw new RuntimeException( "Error downloading Forge binary." );
         
-            Files.copy( res.getInputStream(), path );
+            IO.copy( res.getInputStream(), out );
+        //Ensure temporary file is deleted in the case of an exception
+        } catch( Throwable t ) {
+            Files.deleteIfExists( path );
+            throw t;
         }
         
         return path;

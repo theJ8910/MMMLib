@@ -2,6 +2,8 @@ package net.theJ89.util;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.regex.Pattern;
 
 public class Misc {
@@ -98,6 +100,24 @@ public class Misc {
             filename.substring( 0, idx ),
             filename.substring( idx + 1 ).toLowerCase()
         };
+    }
+    
+    /**
+     * Returns a new MD5 instance.
+     * @return
+     */
+    public static MessageDigest newMD5() {
+        try                                 { return MessageDigest.getInstance( "MD5" ); }
+        catch( NoSuchAlgorithmException e ) { throw new Error( e );                      }
+    }
+    
+    /**
+     * Returns a new SHA-1 instance.
+     * @return
+     */
+    public static MessageDigest newSHA1() {
+        try                                 { return MessageDigest.getInstance( "SHA-1" ); }
+        catch( NoSuchAlgorithmException e ) { throw new Error( e );                        }
     }
     
     /**
