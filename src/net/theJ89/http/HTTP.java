@@ -2,6 +2,8 @@ package net.theJ89.http;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -32,11 +34,25 @@ public class HTTP {
      * @return The URL in object form.
      * @throws Error If the given string is a malformed URL.
      */
-    public static URL stringToURL( String url ) {
+    public static URL stringToURL( final String url ) {
         try {
             return new URL( url );
         } catch( MalformedURLException e ) {
             throw new Error( "Invalid URL: " + url, e );
+        }
+    }
+    
+    /**
+     * Converts the given URI from a string to a URI object.
+     * @param url - The URI in string form.
+     * @return The URI in object form.
+     * @throws Error If the given string is a malformed URI.
+     */
+    public static URI stringToURI( final String uri ) {
+        try {
+            return new URI( uri );
+        } catch (URISyntaxException e) {
+            throw new Error( "Invalid URI: " + uri, e );
         }
     }
     
@@ -46,7 +62,7 @@ public class HTTP {
      * @return HTTPResponse - Result of the request.
      * @throws IOException
      */
-    public static HTTPResponse head( URL url ) throws IOException {
+    public static HTTPResponse head( final URL url ) throws IOException {
         return new HTTPRequest( url ).head();
     }
     
@@ -56,7 +72,7 @@ public class HTTP {
      * @return HTTPResponse - Result of the request.
      * @throws IOException
      */
-    public static HTTPResponse get( URL url ) throws IOException {
+    public static HTTPResponse get( final URL url ) throws IOException {
         return new HTTPRequest( url ).get();
     }
     
@@ -68,7 +84,7 @@ public class HTTP {
      * @return HTTPResponse - Result of the request.
      * @throws IOException
      */
-    public static <E> HTTPResponse post( URL url, E object ) throws IOException {
+    public static <E> HTTPResponse post( final URL url, final E object ) throws IOException {
         return new HTTPRequest( url )
                   .setContentType( ContentType.APPLICATION_JSON, StandardCharsets.UTF_8 )
                   .post( object );
@@ -83,7 +99,7 @@ public class HTTP {
      * @return HTTPResponse - Result of the request.
      * @throws IOException
      */
-    public static HTTPResponse post( URL url, String contentType, Charset charset, String data ) throws IOException {
+    public static HTTPResponse post( final URL url, final String contentType, final Charset charset, final String data ) throws IOException {
         return new HTTPRequest( url )
                   .setContentType( contentType, charset )
                   .post( data );
@@ -99,7 +115,7 @@ public class HTTP {
      * @return HTTPResponse - Result of the request.
      * @throws IOException
      */
-    public static HTTPResponse post( URL url, String contentType, Charset charset, byte[] data ) throws IOException {
+    public static HTTPResponse post( final URL url, final String contentType, final Charset charset, final byte[] data ) throws IOException {
         return new HTTPRequest( url )
                   .setContentType( contentType, charset )
                   .post( data );

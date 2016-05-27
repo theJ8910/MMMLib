@@ -113,15 +113,9 @@ public class ForgeInstaller {
                 }
             }
             
-            //Find which library is the Forge binary
-            //Ideally we'd extract this from the "install" info, but that's in the forge installer.
-            String forgeLibName = fvi.getForgeLibraryName();
-            if( forgeLibName == null )
-                throw new RuntimeException( "Couldn't determine the library name for this version of Minecraft Forge." );
-            
             //Get the installation path for the Forge binary and move our forge binary out of its temporary location
             Path librariesDir = directory.resolve( MinecraftConstants.LIBRARIES_DIRECTORY );
-            Path forgeBinary = ( side == Side.CLIENT ) ? librariesDir.resolve( Library.getPathFromName( forgeLibName ) ) : directory.resolve( tempForgeBinary.getFileName() );
+            Path forgeBinary = getForgeBinaryPath( fvi, librariesDir );
             if( !Files.exists( forgeBinary ) ) {
                 System.out.println( "Installing Minecraft Forge binary to \"" + forgeBinary + "\"..." );
                 Files.createDirectories( forgeBinary.getParent() );
@@ -206,7 +200,7 @@ public class ForgeInstaller {
             if( !res.ok() )
                 throw new RuntimeException( "Error downloading Forge binary." );
         
-            IO.copy( res.getInputStream(), out );
+            IO.copy_MD5_SHA1( res.getInputStream(), out, fd.getMD5(), fd.getSHA1() );
         //Ensure temporary file is deleted in the case of an exception
         } catch( Throwable t ) {
             Files.deleteIfExists( path );
@@ -214,6 +208,24 @@ public class ForgeInstaller {
         }
         
         return path;
+    }
+    
+    /**
+     * Returns the path we should install the Forge binary to
+     * @param fvi
+     * @param librariesDir
+     * @return
+     */
+    private Path getForgeBinaryPath( final ForgeVersionInfo fvi, final Path librariesDir ) {
+        //Find which library is the Forge binary
+        //Ideally we'd extract this from the "install" info, but that's in the forge installer.
+        String forgeLibName = fvi.getForgeLibraryName();
+        if( forgeLibName == null )
+            throw new RuntimeException( "Couldn't determine the library name for this version of Minecraft Forge." );
+        
+        //TODO For the server, I'd prefer that it have the same name that its URL does, but this should do for now.
+        if( this.side == Side.CLIENT ) { return librariesDir.resolve( Library.getPathFromName( forgeLibName ) ); }
+        else                           { return this.directory.resolve( "forge-"+ this.mc_name + "-" + this.forge_name + "-universal.jar" ); }
     }
     
     /**

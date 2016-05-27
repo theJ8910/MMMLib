@@ -12,8 +12,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
-import java.io.Reader;
-import java.io.Writer;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -105,13 +103,22 @@ public class IO {
     public static JarOutputStream newBufferedJarFileOutputStream( final Path path ) throws IOException {
         return new JarOutputStream( new BufferedOutputStream( Files.newOutputStream( path ) ) );
     }
+    
+    /**
+     * Returns a new BufferedReader that reads default charset characters from the given input stream.
+     * @param in
+     * @return
+     */
+    public static BufferedReader newBufferedISReader( final InputStream in ) {
+        return new BufferedReader( new InputStreamReader( in ) );
+    }
 
     /**
      * Returns a new BufferedReader that reads UTF-8 characters from the given input stream.
      * @param in
      * @return
      */
-    public static Reader newBufferedU8ISReader( final InputStream in ) {
+    public static BufferedReader newBufferedU8ISReader( final InputStream in ) {
         return new BufferedReader( new InputStreamReader( in, StandardCharsets.UTF_8 ) );
     }
     
@@ -121,8 +128,17 @@ public class IO {
      * @return
      * @throws IOException
      */
-    public static Reader newBufferedU8FileReader( final Path path ) throws IOException {
+    public static BufferedReader newBufferedU8FileReader( final Path path ) throws IOException {
         return Files.newBufferedReader( path, StandardCharsets.UTF_8 );
+    }
+    
+    /**
+     * Returns a new BufferedWriter that writes default charset characters to the given output stream.
+     * @param in
+     * @return
+     */
+    public static BufferedWriter newBufferedOSWriter( final OutputStream in ) {
+        return new BufferedWriter( new OutputStreamWriter( in ) );
     }
     
     /**
@@ -131,7 +147,7 @@ public class IO {
      * @return
      * @throws IOException
      */
-    public static Writer newBufferedU8OSWriter( final OutputStream out ) throws IOException {
+    public static BufferedWriter newBufferedU8OSWriter( final OutputStream out ) throws IOException {
         return new BufferedWriter( new OutputStreamWriter( out, StandardCharsets.UTF_8 ) );
     }
     
@@ -141,7 +157,7 @@ public class IO {
      * @return
      * @throws IOException
      */
-    public static Writer newBufferedU8FileWriter( final Path path ) throws IOException {
+    public static BufferedWriter newBufferedU8FileWriter( final Path path ) throws IOException {
         return Files.newBufferedWriter( path, StandardCharsets.UTF_8 );
     }
     
@@ -177,6 +193,33 @@ public class IO {
     }
     
     /**
+     * Same as {@link #copy(InputStream, OutputStream)}, but if hash is not null, computes an MD5 hash of the data as it passes from in to out.
+     * After the data has been fully read, the computed hash is compared to the given hash.
+     * A RuntimeException is generated if the hashes do not match.
+     * @param in
+     * @param out
+     * @param hash
+     * @throws IOException
+     */
+    public static void copy_MD5( final InputStream in, final OutputStream out, final String hash ) throws IOException {
+        if( hash == null ) {
+            copy( in, out );
+            return;
+        }
+        
+        byte[] buf = new byte[4096];
+        int c;
+        MessageDigest md5 = Misc.newSHA1();
+        while( ( c = in.read( buf ) ) != -1 ) {
+            out.write( buf, 0, c );
+            md5.update( buf, 0, c );
+        }
+        String computedHash = String.format( "%032x", new BigInteger( 1, md5.digest() ) );
+        if( !computedHash.equals( hash ) )
+            throw new RuntimeException( "SHA-1 hash (" + computedHash + ") doesn't match expected hash (" + hash + ")." );
+    }
+    
+    /**
      * Same as {@link #copy(InputStream, OutputStream)}, but if hash is not null, computes a SHA-1 hash of the data as it passes from in to out.
      * After the data has been fully read, the computed hash is compared to the given hash.
      * A RuntimeException is generated if the hashes do not match.
@@ -185,7 +228,7 @@ public class IO {
      * @param hash
      * @throws IOException
      */
-    public static void copyAndSHA1( final InputStream in, final OutputStream out, final String hash ) throws IOException {
+    public static void copy_SHA1( final InputStream in, final OutputStream out, final String hash ) throws IOException {
         if( hash == null ) {
             copy( in, out );
             return;
@@ -201,6 +244,43 @@ public class IO {
         String computedHash = String.format( "%040x", new BigInteger( 1, sha1.digest() ) );
         if( !computedHash.equals( hash ) )
             throw new RuntimeException( "SHA-1 hash (" + computedHash + ") doesn't match expected hash (" + hash + ")." );
+    }
+    
+    /**
+     * Same as {@link #copy(InputStream, OutputStream)}, but if md5Hash and/or sha1Hash is not null, computes the MD5 and/or SHA1 hash of the data as it passes from in to out.
+     * After the data has been fully read, the computed hashes are compared to the given hashes.
+     * A RuntimeException is generated if either hash doesn't match.
+     * @throws IOException 
+     */
+    public static void copy_MD5_SHA1( final InputStream in, final OutputStream out, final String md5Hash, final String sha1Hash ) throws IOException {
+        if( md5Hash == null ) {
+            copy_SHA1( in, out, sha1Hash );
+            return;
+        }
+        if( sha1Hash == null ) {
+            copy_MD5( in, out, md5Hash );
+            return;
+        }
+        
+        byte[] buf = new byte[4096];
+        int c;
+        MessageDigest md5  = Misc.newMD5();
+        MessageDigest sha1 = Misc.newSHA1();
+        while( ( c = in.read( buf ) ) != -1 ) {
+            out.write( buf, 0, c );
+            md5.update( buf, 0, c );
+            sha1.update( buf, 0, c );
+        }
+        
+        //Check MD5 hash
+        String computedHash = String.format( "%032x", new BigInteger( 1, md5.digest() ) );
+        if( !computedHash.equals( md5Hash ) )
+            throw new RuntimeException( "MD5 hash (" + computedHash + ") doesn't match expected hash (" + md5Hash + ")." );
+        
+        //Check SHA-1 hash
+        computedHash = String.format( "%040x", new BigInteger( 1, sha1.digest() ) );
+        if( !computedHash.equals( sha1Hash ) )
+            throw new RuntimeException( "SHA-1 hash (" + computedHash + ") doesn't match expected hash (" + sha1Hash + ")." );
     }
     
     /**

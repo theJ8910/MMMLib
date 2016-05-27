@@ -102,29 +102,34 @@ public class Instance {
     
     public void launch( final String version, final UserData userdata ) throws IOException {
         MinecraftLauncher l = new MinecraftLauncher();
-        
         Path directory = this.directory;
-
-        CompleteMinecraftVersion cmv = MinecraftVersions.load( directory.resolve( MinecraftConstants.VERSIONS_DIRECTORY ), version );
-        l.setVersion( cmv );
+        
         l.setSide( this.side );
-        l.setUserData( userdata );
-
         l.setGameDirectory( directory );
-        l.setVersionsDirectory( directory.resolve( MinecraftConstants.VERSIONS_DIRECTORY ) );
-        l.setLibrariesDirectory( directory.resolve( MinecraftConstants.LIBRARIES_DIRECTORY ) );
-        l.setNativesDirectory( directory.resolve( MinecraftConstants.NATIVES_DIRECTORY ) );
-        l.setAssetsDirectory( directory.resolve( MinecraftConstants.ASSETS_DIRECTORY ) );
-
-        l.setProfileName( this.name );
-
+        
         l.setNurserySize( this.nurserySize );
         l.setInitialHeapSize( this.initialHeapSize );
         l.setMaxHeapSize( this.maxHeapSize );
         l.setMetaspaceSize( this.metaspaceSize );
         
-        l.setResolution( this.resolution );
-
+        //Launching the server's a lot simpler than launching the client.
+        if( this.side == Side.CLIENT ) {
+            CompleteMinecraftVersion cmv = MinecraftVersions.load( directory.resolve( MinecraftConstants.VERSIONS_DIRECTORY ), version );
+            l.setVersion( cmv );
+            l.setUserData( userdata );
+            
+            l.setVersionsDirectory( directory.resolve( MinecraftConstants.VERSIONS_DIRECTORY ) );
+            l.setLibrariesDirectory( directory.resolve( MinecraftConstants.LIBRARIES_DIRECTORY ) );
+            l.setNativesDirectory( directory.resolve( MinecraftConstants.NATIVES_DIRECTORY ) );
+            l.setAssetsDirectory( directory.resolve( MinecraftConstants.ASSETS_DIRECTORY ) );
+    
+            l.setProfileName( this.name );
+            
+            l.setResolution( this.resolution );
+        } else if( this.side == Side.SERVER ) {
+            l.setServerJar( directory.resolve( "minecraft_server." + version + ".jar" ).toString() );
+        }
+        
         l.launch();
     }
 }

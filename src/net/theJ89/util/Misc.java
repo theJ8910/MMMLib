@@ -1,5 +1,10 @@
 package net.theJ89.util;
 
+import java.awt.Desktop;
+import java.awt.GraphicsEnvironment;
+import java.awt.HeadlessException;
+import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
@@ -138,5 +143,22 @@ public class Misc {
      */
     public static boolean isValidSHA1( final String sha1 ) {
         return RE_SHA1.matcher( sha1 ).matches();
+    }
+    
+    /**
+     * Opens the given URI in the system's web browser.
+     * Prints an error message if an exception occurs.
+     * @param uri - URI of the address to visit.
+     * @return true if the browser was launched, false otherwise.
+     */
+    public static boolean browse( final URI uri ) {
+        try {
+            Desktop.getDesktop().browse( uri );
+            return true;
+        } catch( UnsupportedOperationException | IOException e ) {
+            System.err.println( "Couldn't open the browser. An error occurred:" );
+            e.printStackTrace();
+            return false;
+        }
     }
 }

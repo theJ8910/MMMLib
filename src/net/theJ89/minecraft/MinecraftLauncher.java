@@ -53,6 +53,8 @@ public class MinecraftLauncher {
     
     private Size2D                   resolution;
     
+    private String                   serverJar;
+    
     private boolean                  demo;
     
     public MinecraftLauncher() {
@@ -170,12 +172,19 @@ public class MinecraftLauncher {
         return this.resolution;
     }
     
+    public void setServerJar( final String serverJar ) {
+        this.serverJar = serverJar;
+    }
+    
+    public String getServerJar() {
+        return this.serverJar;
+    }
+    
     public void launch() throws IOException {
         JavaLauncher l = new JavaLauncher();
         
         Side                     side    = this.side;
         CompleteMinecraftVersion version = this.version;
-        String                   name    = version.getId();
         
         Path gameDirectory      = this.gameDirectory;
         Path versionsDirectory  = this.versionsDirectory;
@@ -226,7 +235,7 @@ public class MinecraftLauncher {
             //Build list of Minecraft arguments
             l.setArguments( getArguments() );
         } else {
-            l.setJarName( "minecraft_server." + name + ".jar" );
+            l.setJarName( this.serverJar );
             l.setArgumentsIL( "nogui" );
         }
         

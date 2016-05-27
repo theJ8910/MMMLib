@@ -1,11 +1,15 @@
 package net.theJ89.minecraft;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Map;
@@ -30,11 +34,15 @@ import net.theJ89.http.HTTP;
 import net.theJ89.http.HTTPResponse;
 import net.theJ89.mmm.Side;
 import net.theJ89.util.IO;
+import net.theJ89.util.Misc;
 import net.theJ89.util.Platform;
 import net.theJ89.util.Target;
 
 public class MinecraftInstaller {
-    private static final String BASE_ASSETS_URL = "http://resources.download.minecraft.net/";
+    private static final String            BASE_ASSETS_URL         = "http://resources.download.minecraft.net/";
+    private static final URI               MINECRAFT_EULA_URL      = HTTP.stringToURI( "https://account.mojang.com/documents/minecraft_eula" );
+    private static final String            MINECRAFT_EULA_FILENAME = "eula.txt";
+    private static final DateTimeFormatter FMT                     = DateTimeFormatter.ofPattern( "EEE MMMM d HH:mm:ss zzz yyyy" ); //Thu May 26 15:48:28 CDT 2016
     
     private static final Gson gson;
     static {
@@ -156,6 +164,20 @@ public class MinecraftInstaller {
             //Download server executable
             Executable dl = downloads.get( DownloadType.SERVER );
             download( dl.getURL(), directory.resolve( "minecraft_server." + name + ".jar" ), dl.getSha1() );
+            
+            //If eula.txt doesn't exist, ask user if they want to generate a signed eula.txt.
+            Path eulaPath = directory.resolve( MINECRAFT_EULA_FILENAME );
+            if( Files.exists( eulaPath ) || !this.eulaPrompt() )
+                return;
+            
+            System.out.println( "Generating signed \"" + MINECRAFT_EULA_FILENAME + "\"..." );
+            try( Writer out = IO.newBufferedU8FileWriter( eulaPath ) ) {
+                out.write(
+                    "#By changing the setting below to TRUE you are indicating your agreement to our EULA ("+ MINECRAFT_EULA_URL + ").\n" +
+                    "#" + ZonedDateTime.now().format( FMT ) + "\n" +
+                    "eula=true\n"
+                );
+            }
         }
     }
     
@@ -174,7 +196,7 @@ public class MinecraftInstaller {
         ) {
             if( !res.ok() )
                 throw new RuntimeException( "Error downloading \"" + url + "\"." );
-            IO.copyAndSHA1( res.getInputStream(), out, sha1 );
+            IO.copy_SHA1( res.getInputStream(), out, sha1 );
         }
     }
     
@@ -208,6 +230,37 @@ public class MinecraftInstaller {
             }
         } finally {
             jarfile.close();
+        }
+    }
+    
+    private boolean eulaPrompt() throws IOException {
+        System.out.println( "Since Minecraft 1.7.10, Mojang requires users to agree to an End User License Agreement (EULA) before they can use the Minecraft Server." );
+        System.out.println( "You can view their EULA at the following address (or type \"r\" at the following prompt):" );
+        System.out.println( MINECRAFT_EULA_URL + "\n" );
+        
+        System.out.println( "Normally a user must run the server once, let it generate a \"" + MINECRAFT_EULA_FILENAME + "\" file, and then edit it to indicate they agree to the EULA." );
+        System.out.println( "MMM can automate this step and generate a signed \"" + MINECRAFT_EULA_FILENAME + "\" for you if desired.\n" );
+        
+        BufferedReader in = IO.newBufferedISReader( System.in );
+        while( true ) {
+            System.out.print( "Do you agree to the Minecraft EULA and want MMM to generate a signed \"" + MINECRAFT_EULA_FILENAME + "\" for you? (y/n/r): " );
+            
+            String response = in.readLine().toLowerCase();
+            switch( response ) {
+            case "yes":
+            case "y":
+                return true;
+            case "no":
+            case "n":
+                return false;
+            case "read":
+            case "r":
+                System.out.println( "Opening " + MINECRAFT_EULA_URL + " in a browser..." );
+                Misc.browse( MINECRAFT_EULA_URL );
+                break;
+            default:
+                System.out.println( "Invalid choice. Please enter \"y\", \"n\", or \"r\"." );
+            }
         }
     }
 }
