@@ -180,7 +180,7 @@ public class MinecraftLauncher {
         return this.serverJar;
     }
     
-    public void launch() throws IOException {
+    public Process launch() throws IOException {
         JavaLauncher l = new JavaLauncher();
         
         Side                     side    = this.side;
@@ -243,7 +243,7 @@ public class MinecraftLauncher {
         l.setWorkingDirectory( gameDirectory );
         
         //Run Minecraft
-        l.launch();
+        return l.launch();
     }
     
     private List<String> getArguments() {

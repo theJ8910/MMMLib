@@ -37,6 +37,7 @@ public class JavaLauncher {
     //Process options
     private Path                workingDirectory;
     private Map<String, String> environment;
+    private boolean             inheritIO;
     
     public JavaLauncher() {
         this.wantConsole           = false;
@@ -58,6 +59,7 @@ public class JavaLauncher {
         
         this.workingDirectory      = null;
         this.environment           = null;
+        this.inheritIO             = true;
     }
     
     /**
@@ -65,7 +67,7 @@ public class JavaLauncher {
      * The arguments are expected
      * @param arguments
      */
-    public static List<String> parseArguments( String argumentString ) {
+    public static List<String> parseArguments( final String argumentString ) {
         Matcher m = ARGUMENT_REGEX.matcher( argumentString );
         List<String> arguments = new ArrayList<String>();
         while( m.find() ) {
@@ -79,7 +81,7 @@ public class JavaLauncher {
      * Sets whether or not java should be started with a console. Defaults to false.
      * @param wantConsole - If true, launch java with a console. If false, don't.
      */
-    public void setWantConsole( boolean wantConsole ) {
+    public void setWantConsole( final boolean wantConsole ) {
         this.wantConsole = wantConsole;
     }
     
@@ -87,7 +89,7 @@ public class JavaLauncher {
         return this.wantConsole;
     }
     
-    public void setUseConcMarkSweepGC( boolean useConcMarkSweepGC ) {
+    public void setUseConcMarkSweepGC( final boolean useConcMarkSweepGC ) {
         this.useConcMarkSweepGC = useConcMarkSweepGC;
     }
     
@@ -95,7 +97,7 @@ public class JavaLauncher {
         return this.useConcMarkSweepGC;
     }
     
-    public void setUseCMSIncrementalMode( boolean useCMSIncrementalMode ) {
+    public void setUseCMSIncrementalMode( final boolean useCMSIncrementalMode ) {
         this.useCMSIncrementalMode = useCMSIncrementalMode;
     }
     
@@ -103,7 +105,7 @@ public class JavaLauncher {
         return this.useCMSIncrementalMode;
     }
     
-    public void setUseAdaptiveSizePolicy( boolean useAdaptiveSizePolicy ) {
+    public void setUseAdaptiveSizePolicy( final boolean useAdaptiveSizePolicy ) {
         this.useAdaptiveSizePolicy = useAdaptiveSizePolicy;
     }
     
@@ -115,7 +117,7 @@ public class JavaLauncher {
      * Inline version of {@link #setClassPaths(List)}.
      * @param libraryPaths - Zero-to-many class paths. If none provided, sets class paths to null.
      */
-    public void setClassPathsIL( String... classPaths ) {
+    public void setClassPathsIL( final String... classPaths ) {
         if( classPaths.length == 0 )
             this.classPaths = null;
         
@@ -131,7 +133,7 @@ public class JavaLauncher {
      * If the given string is null, no class paths are passed to the JVM.
      * @param classPaths
      */
-    public void setClassPaths( List<String> classPaths ) {
+    public void setClassPaths( final List<String> classPaths ) {
         this.classPaths = classPaths;
     }
     
@@ -143,7 +145,7 @@ public class JavaLauncher {
      * Inline version of {@link #setLibraryPaths(List)}.
      * @param libraryPaths - Zero-to-many library directories. If none provided, sets library paths to null.
      */
-    public void setLibraryPathsIL( String... libraryPaths ) {
+    public void setLibraryPathsIL( final String... libraryPaths ) {
         if( libraryPaths.length == 0 )
             this.libraryPaths = null;
         
@@ -159,7 +161,7 @@ public class JavaLauncher {
      * If the given string is null, no library paths are passed to the JVM.
      * @param libraryPaths
      */
-    public void setLibraryPaths( List<String> libraryPaths ) {
+    public void setLibraryPaths( final List<String> libraryPaths ) {
         this.libraryPaths = libraryPaths;
     }
     
@@ -175,7 +177,7 @@ public class JavaLauncher {
      * If null is given, the default will be used.
      * @param initialHeapSize - The initial heap size to use, or null.
      */
-    public void setInitialHeapSize( Long initialHeapSize ) {
+    public void setInitialHeapSize( final Long initialHeapSize ) {
         if( initialHeapSize == null ) {
             this.initialHeapSize = null;
             return;
@@ -205,7 +207,7 @@ public class JavaLauncher {
      * If null is given, the default will be used.
      * @param maxHeapSize - The max heap size to use, or null.
      */
-    public void setMaxHeapSize( Long maxHeapSize ) {
+    public void setMaxHeapSize( final Long maxHeapSize ) {
         if( maxHeapSize == null ) {
             this.maxHeapSize = null;
             return;
@@ -234,7 +236,7 @@ public class JavaLauncher {
      * If null is given, the default will be used.
      * @param nurserySize - The size of the nursery to use, or null.
      */
-    public void setNurserySize( Long nurserySize ) {
+    public void setNurserySize( final Long nurserySize ) {
         if( nurserySize == null ) {
             this.nurserySize = null;
             return;
@@ -259,7 +261,7 @@ public class JavaLauncher {
      * In earlier versions of Java, this defaults to 32-64 MB.
      * @param metaspaceSize - The metaspace / permgen size or null.
      */
-    public void setMetaspaceSize( Long metaspaceSize ) {
+    public void setMetaspaceSize( final Long metaspaceSize ) {
         if( metaspaceSize == null ) {
             this.metaspaceSize = null;
             return;
@@ -279,7 +281,7 @@ public class JavaLauncher {
      * Inline version of {@link #setOtherJVMArguments(List)}.
      * @param arguments - Zero-to-many arguments. If none provided, sets other JVM arguments to null.
      */
-    public void setOtherJVMArgumentsIL( String... otherJVMArguments ) {
+    public void setOtherJVMArgumentsIL( final String... otherJVMArguments ) {
         if( otherJVMArguments.length == 0 )
             this.otherJVMArguments = null;
         
@@ -293,7 +295,7 @@ public class JavaLauncher {
      * Use this to provide additional JVM arguments that this class may not provide.
      * @param otherJVMArguments
      */
-    public void setOtherJVMArguments( List<String> otherJVMArguments ) {
+    public void setOtherJVMArguments( final List<String> otherJVMArguments ) {
         this.otherJVMArguments = otherJVMArguments;
     }
     
@@ -306,7 +308,7 @@ public class JavaLauncher {
      * This must name a class with a "public static void main( String[] args ) { ... }" method.
      * @param classname
      */
-    public void setClassName( String classname) {
+    public void setClassName( final String classname) {
         this.classname = classname;
     }
     
@@ -319,7 +321,7 @@ public class JavaLauncher {
      * Note: A classname or jarname (not both) must be set or Java will fail to launch.
      * @param jarname
      */
-    public void setJarName( String jarname ) {
+    public void setJarName( final String jarname ) {
         this.jarname = jarname;
     }
     
@@ -331,7 +333,7 @@ public class JavaLauncher {
      * Inline version of {@link #setArguments(List)}.
      * @param arguments - Zero-to-many arguments. If none provided, sets arguments to null.
      */
-    public void setArgumentsIL( String... arguments ) {
+    public void setArgumentsIL( final String... arguments ) {
         if( arguments.length == 0 )
             this.arguments = null;
         
@@ -345,7 +347,7 @@ public class JavaLauncher {
      * Use this to set the arguments that will be provided to the main() method of the java class you're running.
      * @param arguments
      */
-    public void setArguments( List<String> arguments ) {
+    public void setArguments( final List<String> arguments ) {
         this.arguments = arguments;
     }
     
@@ -358,7 +360,7 @@ public class JavaLauncher {
      * If directory is null, the default value is used (this process's working directory).
      * @param directory - The directory to use, or null.
      */
-    public void setWorkingDirectory( Path directory ) {
+    public void setWorkingDirectory( final Path directory ) {
         this.workingDirectory = directory;
     }
     
@@ -375,7 +377,7 @@ public class JavaLauncher {
      * @param environment - Zero-to-many arguments in pairs of two (i.e. setEnvironmentIL( K, V, K, V, ...)). If none provided, sets environment to null.
      * @throws InvalidParameterException - If arguments are not provided in pairs.
      */
-    public void setEnvironmentIL( String... environment ) {
+    public void setEnvironmentIL( final String... environment ) {
         if( environment.length == 0 ) {
             this.environment = null;
             return;
@@ -395,7 +397,7 @@ public class JavaLauncher {
      * This function sets a map of environment variables to add / replace.
      * @param environment
      */
-    public void setEnvironment( Map<String,String> environment ) {
+    public void setEnvironment( final Map<String,String> environment ) {
         this.environment = environment;
     }
     
@@ -404,9 +406,23 @@ public class JavaLauncher {
     }
     
     /**
-     * Launches the executable.
+     * Sets whether or not the new java process should use this process's stdout, stdin, and stderr streams.
+     * By default, new java processes spawned with JavaLauncher inherit I/O.
+     * @param inheritIO - true to inherit I/O, false otherwise.
      */
-    public void launch() {
+    public void setInheritIO( final boolean inheritIO ) {
+        this.inheritIO = inheritIO;
+    }
+    
+    public boolean getInheritIO() {
+        return this.inheritIO;
+    }
+    
+    /**
+     * Launches the executable.
+     * @throws IOException 
+     */
+    public Process launch() throws IOException {
         List<String> commandLine = new ArrayList< String >();
         
         //Java executable
@@ -491,8 +507,8 @@ public class JavaLauncher {
         }
         
         //Finally, launch Java.
-        pb.inheritIO();
-        try                    { pb.start();          }
-        catch( IOException e ) { e.printStackTrace(); }
+        if( this.inheritIO )
+            pb.inheritIO();
+        return pb.start();
     }
 }

@@ -39,10 +39,11 @@ import net.theJ89.util.Platform;
 import net.theJ89.util.Target;
 
 public class MinecraftInstaller {
-    private static final String            BASE_ASSETS_URL         = "http://resources.download.minecraft.net/";
-    private static final URI               MINECRAFT_EULA_URL      = HTTP.stringToURI( "https://account.mojang.com/documents/minecraft_eula" );
-    private static final String            MINECRAFT_EULA_FILENAME = "eula.txt";
-    private static final DateTimeFormatter FMT                     = DateTimeFormatter.ofPattern( "EEE MMMM d HH:mm:ss zzz yyyy" ); //Thu May 26 15:48:28 CDT 2016
+    private static final String            BASE_ASSETS_URL              = "http://resources.download.minecraft.net/";
+    private static final URI               MINECRAFT_EULA_URL           = HTTP.stringToURI( "https://account.mojang.com/documents/minecraft_eula" );
+    private static final String            MINECRAFT_EULA_FILENAME      = "eula.txt";
+    private static final Date              MINECRAFT_1_7_10_RELEASETIME = new Date( 1400088563000L );
+    private static final DateTimeFormatter FMT                          = DateTimeFormatter.ofPattern( "EEE MMMM d HH:mm:ss zzz yyyy" ); //Thu May 26 15:48:28 CDT 2016
     
     private static final Gson gson;
     static {
@@ -164,6 +165,10 @@ public class MinecraftInstaller {
             //Download server executable
             Executable dl = downloads.get( DownloadType.SERVER );
             download( dl.getURL(), directory.resolve( "minecraft_server." + name + ".jar" ), dl.getSha1() );
+            
+            //Minecraft 1.7.10 servers and above require agreement to a EULA before they can be used
+            if( version.getReleaseTime().before( MINECRAFT_1_7_10_RELEASETIME ) )
+                return;
             
             //If eula.txt doesn't exist, ask user if they want to generate a signed eula.txt.
             Path eulaPath = directory.resolve( MINECRAFT_EULA_FILENAME );

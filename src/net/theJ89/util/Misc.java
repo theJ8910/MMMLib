@@ -1,8 +1,6 @@
 package net.theJ89.util;
 
 import java.awt.Desktop;
-import java.awt.GraphicsEnvironment;
-import java.awt.HeadlessException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;

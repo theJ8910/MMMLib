@@ -130,6 +130,8 @@ public class Instance {
             l.setServerJar( directory.resolve( "minecraft_server." + version + ".jar" ).toString() );
         }
         
-        l.launch();
+        Process p = l.launch();
+        try                            { p.waitFor();         }
+        catch (InterruptedException e) { e.printStackTrace(); }
     }
 }
